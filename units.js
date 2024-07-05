@@ -37,21 +37,31 @@ class BasicWarrior {
     }
 
     whenClicked(stateObj) {
-        console.log("has unit moved? - " + this.unitMovedThisTurn);
-        if (!this.playerOwned || this.unitMovedThisTurn) return stateObj;
+        if (!this.playerOwned || (this.unitMovedThisTurn && this.unitAttackedThisTurn)) return stateObj;
 
-        return immer.produce(stateObj, draft => {
+        let newState = immer.produce(stateObj, draft => {
             const gridSize = 5; // Assuming a 5x5 grid
             const { movableSquares, attackRangeSquares } = this.getMovableSquares(gridSize);
 
-            draft.movableSquares = movableSquares.filter(square => {
-                return square >= 0 && square < draft.grid.length && draft.grid[square] === 0;
-            });
+            if (!this.unitMovedThisTurn) {
+                draft.movableSquares = movableSquares.filter(square => {
+                    return square >= 0 && square < draft.grid.length && draft.grid[square] === 0;
+                });
+            }
 
-            draft.attackRangeSquares = attackRangeSquares.filter(square => {
-                return square >= 0 && square < draft.grid.length && draft.opponentArmy.some(unit => unit.currentSquare === square);
-            });
+            if (!this.unitAttackedThisTurn) {
+                draft.attackRangeSquares = attackRangeSquares.filter(square => {
+                    return square >= 0 && square < draft.grid.length && draft.opponentArmy.some(unit => unit.currentSquare === square);
+                });
+            }
+
         });
+
+        if (this.unitMovedThisTurn && newState.attackRangeSquares.length === 0) {
+            return stateObj
+        } else {
+            return newState
+        }
     }
 
     getMovableSquares(gridSize) {

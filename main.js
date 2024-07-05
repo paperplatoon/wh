@@ -89,7 +89,6 @@ function renderGrid(stateObj) {
 
 function renderGlowingSquares(stateObj) {
     const appDiv = document.getElementById('app');
-    console.log("attack range squares are " + stateObj.attackRangeSquares)
     appDiv.innerHTML = ''; // Clear existing content
 
     const gridContainer = document.createElement('div');
@@ -123,14 +122,15 @@ function renderGlowingSquares(stateObj) {
 }
 
 function handleCellClick(stateObj, index) {
-    console.log('clicked cell ' + index)
     const clickedUnit = stateObj.playerArmy.find(unit => unit.currentSquare === index);
-    if (clickedUnit && !clickedUnit.unitMovedThisTurn) {
+    if (clickedUnit && (!clickedUnit.unitMovedThisTurn ||  !clickedUnit.unitAttackedThisTurn) ) {
         stateObj = clickedUnit.whenClicked(stateObj);
-        stateObj = immer.produce(stateObj, draft => {
-            draft.selectedUnitIndex = draft.playerArmy.indexOf(clickedUnit);
-            draft.currentScreen = "chooseSquareToMove";
-        })
+        if (!clickedUnit.unitMovedThisTurn || (!clickedUnit.unitAttackedThisTurn && stateObj.attackRangeSquares.length !== 0)) {
+            stateObj = immer.produce(stateObj, draft => {
+                draft.selectedUnitIndex = draft.playerArmy.indexOf(clickedUnit);
+                draft.currentScreen = "chooseSquareToMove";
+            })
+        }
         renderScreen(stateObj);
     }
 }
@@ -155,7 +155,6 @@ function handleMoveToSquare(stateObj, index) {
 
         if (hasEnemyUnit && !selectedUnit.unitAttackedThisTurn) {
             const enemyUnit = draft.opponentArmy.find(unit => unit.currentSquare === index);
-            console.log("clicked enemy unit at square " + enemyUnit.currentSquare)
             const gridSize = 5; // Assuming a 5x5 grid
             
             const selectedRow = Math.floor(selectedUnit.currentSquare / gridSize);
@@ -166,11 +165,8 @@ function handleMoveToSquare(stateObj, index) {
             
             // Calculate Manhattan distance
             const distance = Math.max(Math.abs(selectedRow - enemyRow), Math.abs(selectedCol - enemyCol));
-            console.log('distance is ' + distance)
-            console.log(selectedRow, enemyRow)
             
             if (distance <= selectedUnit.attack1.range) {
-                console.log("target unit in range")
                 stateObj = selectedUnit.attack1.execute(stateObj, enemyUnit.currentSquare);
             }
         }
