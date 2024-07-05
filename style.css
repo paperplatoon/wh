@@ -45,3 +45,17 @@
 .glow-red {
     animation: glowRed 1s infinite;
 }
+
+.attack-popup {
+    background-color: white;
+    border: 1px solid black;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.attack-popup button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
