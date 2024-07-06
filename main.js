@@ -275,6 +275,11 @@ function handleAttackButtonClick(stateObj, attackType) {
         draft.currentScreen = "normalScreen"
     });
 
+    const existingPopup = document.querySelector('.attack-popup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+
     stateObj = updateState(stateObj)
     return stateObj
 }
@@ -293,9 +298,7 @@ function handleMoveToSquare(stateObj, index) {
                 draft.selectedUnitIndex = null;
                 draft.currentScreen = "normalScreen";
             }
-        }
-
-        if (hasEnemyUnit && !selectedUnit.unitAttackedThisTurn) {
+        } else if (hasEnemyUnit && !selectedUnit.unitAttackedThisTurn) {
             const enemyUnit = draft.opponentArmy.find(unit => unit.currentSquare === index);
             const inRange1 = draft.attackRangeSquares1.includes(index);
             const inRange2 = draft.attackRangeSquares2.includes(index);
@@ -316,6 +319,7 @@ function handleMoveToSquare(stateObj, index) {
             draft.attackPopupPosition = null;
             draft.attackOptions = null;
             draft.targetEnemyIndex = null;
+            draft.currentScreen = "normalScreen";
         }
 
         // Clear glowing squares and reset selection
@@ -324,7 +328,7 @@ function handleMoveToSquare(stateObj, index) {
         draft.attackRangeSquares2 = [];
         
     });
-    stateObj = updateGrid(stateObj)
+    
     stateObj = updateState(stateObj);
     return stateObj
 }
@@ -343,12 +347,37 @@ function renderScreen(stateObj) {
     }
 }
 
-  // Usage
-  currentState = updateGrid(state);
-  renderScreen(currentState)
+function checkForDeath(stateObj) {
+    return immer.produce(stateObj, draft => {
+        // Check player army
+        for (let i = draft.playerArmy.length - 1; i >= 0; i--) {
+            if (draft.playerArmy[i].health <= 0) {
+                const deadUnitSquare = draft.playerArmy[i].currentSquare;
+                draft.grid[deadUnitSquare] = 0;
+                draft.playerArmy.splice(i, 1);
+            }
+        }
 
-  function updateState(stateObj) {
+        // Check opponent army
+        for (let i = draft.opponentArmy.length - 1; i >= 0; i--) {
+            if (draft.opponentArmy[i].health <= 0) {
+                const deadUnitSquare = draft.opponentArmy[i].currentSquare;
+                draft.grid[deadUnitSquare] = 0;
+                draft.opponentArmy.splice(i, 1);
+            }
+        }
+    });
+}
+
+  // Usage
+
+function updateState(stateObj) {
+    stateObj = checkForDeath(stateObj)
+    stateObj = updateGrid(stateObj)
     state = {...stateObj}
     renderScreen(stateObj)
     return state;
-  }
+}
+
+updateState(state)
+

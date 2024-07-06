@@ -20,44 +20,23 @@ class BasicWarrior {
                     if (targetUnit) {
                         targetUnit.health -= this.attack1.attack;
                         this.unitAttackedThisTurn = true;
-
-                        // Check if the target unit is defeated
-                        if (targetUnit.health <= 0) {
-                            // Remove the defeated unit from the opponent's army
-                            const index = draft.opponentArmy.indexOf(targetUnit);
-                            if (index > -1) {
-                                draft.opponentArmy.splice(index, 1);
-                            }
-                            // Clear the defeated unit from the grid
-                            draft.grid[targetIndex] = 0;
-                        }
                     }
                 });
             }
         };
 
         this.attack2 = {
-            range: 3, 
-            attack: 1, 
+            range: 1, 
+            attack: 5, 
             execute: (stateObj, targetIndex) => {
-                return immer.produce(stateObj, draft => {
+                stateObj = immer.produce(stateObj, draft => {
                     const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
                     if (targetUnit) {
                         targetUnit.health -= this.attack2.attack;
                         this.unitAttackedThisTurn = true;
-
-                        // Check if the target unit is defeated
-                        if (targetUnit.health <= 0) {
-                            // Remove the defeated unit from the opponent's army
-                            const index = draft.opponentArmy.indexOf(targetUnit);
-                            if (index > -1) {
-                                draft.opponentArmy.splice(index, 1);
-                            }
-                            // Clear the defeated unit from the grid
-                            draft.grid[targetIndex] = 0;
-                        }
                     }
                 });
+                return stateObj
             }
         };
     }
