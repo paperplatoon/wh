@@ -2,7 +2,7 @@ let state = {
     currentScreen: "normalScreen",
     playerTurn: true,
     turnCounter: 0,
-    playerArmy: [playerWarrior1, playerWarrior2],
+    playerArmy: [playerWarrior1, playerWarrior2, playerWarrior3],
     opponentArmy: [opponentWarrior1, opponentWarrior2],
     movableSquares: [],
     attackRangeSquares1: [],
@@ -28,17 +28,6 @@ let state = {
     currentUnitID: 4,
 };
 
-
-function createEndTurnButton(stateObj) {
-    const endTurnButton = document.createElement('button');
-    endTurnButton.textContent = 'End Turn';
-    endTurnButton.addEventListener('click', () => {
-        stateObj = handleEndTurn(stateObj);
-        updateState(stateObj);
-    });
-
-    return endTurnButton
-}
 
 function handleEndTurn(stateObj) {
     stateObj = immer.produce(stateObj, draft => {
@@ -80,11 +69,15 @@ function updateGrid(stateObj) {
         });
     })
     return newState;
-  }
+}
   
 function renderGrid(stateObj) {
     const appDiv = document.getElementById('app');
     appDiv.innerHTML = ''; // Clear existing content
+    const existingPopup = document.querySelector('.attack-popup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
 
     const gridContainer = document.createElement('div');
     gridContainer.className = 'grid-container';
@@ -96,8 +89,10 @@ function renderGrid(stateObj) {
         if (cell === 0) {
             cellDiv.style.backgroundColor = 'white';
         } else {
-            cellDiv.style.backgroundColor = cell.color;
-            cellDiv.textContent = stateObj.grid[index].health
+            const avatar = createImageAvatar(cell)
+            healthDiv = createHealthText(cell)
+            cellDiv.appendChild(avatar)
+            cellDiv.appendChild(healthDiv)
             cellDiv.addEventListener('click', () => handleCellClick(stateObj, index));
         };
         gridContainer.appendChild(cellDiv);
@@ -121,8 +116,10 @@ function renderGlowingSquares(stateObj) {
         if (cell === 0) {
             cellDiv.style.backgroundColor = 'white';
         } else {
-            cellDiv.style.backgroundColor = cell.color;
-            cellDiv.textContent = stateObj.grid[index].health;
+            const avatar = createImageAvatar(cell)
+            const healthDiv = createHealthText(cell)
+            cellDiv.appendChild(avatar)
+            cellDiv.appendChild(healthDiv)
         }
         
         if (stateObj.attackRangeSquares1.includes(index) || stateObj.attackRangeSquares2.includes(index)) {
@@ -151,43 +148,6 @@ function renderGlowingSquares(stateObj) {
     appDiv.appendChild(gridContainer);
 }
 
-function renderAttackPopup(stateObj, cellDiv) {
-    // Remove any existing popup
-    const existingPopup = document.querySelector('.attack-popup');
-    if (existingPopup) {
-        existingPopup.remove();
-    }
-
-    const popup = document.createElement('div');
-    popup.className = 'attack-popup';
-
-    // Position the popup above the cell
-    const cellRect = cellDiv.getBoundingClientRect();
-    popup.style.position = 'absolute';
-    popup.style.left = `${cellRect.left}px`;
-    popup.style.top = `${cellRect.top - 60}px`; // Adjust this value as needed
-
-    if (stateObj.attackOptions.attack1) {
-        const attack1Button = document.createElement('button');
-        attack1Button.textContent = 'Attack 1';
-        attack1Button.onclick = () => {
-            stateObj = handleAttackButtonClick(stateObj, 'attack1');
-        };
-        popup.appendChild(attack1Button);
-    }
-
-    if (stateObj.attackOptions.attack2) {
-        const attack2Button = document.createElement('button');
-        attack2Button.textContent = 'Attack 2';
-        attack2Button.onclick = () => {
-            stateObj = handleAttackButtonClick(stateObj, 'attack2');
-        };
-        popup.appendChild(attack2Button);
-    }
-
-    document.body.appendChild(popup);
-}
-
 function calculatePopupPosition(index, popupWidth, popupHeight) {
     const gridContainer = document.querySelector('.grid-container');
     const gridRect = gridContainer.getBoundingClientRect();
@@ -211,6 +171,11 @@ function calculatePopupPosition(index, popupWidth, popupHeight) {
 
     return { x: popupX, y: popupY };
 }
+
+
+
+
+
 function renderAttackPopup(stateObj, cellDiv) {
     // Remove any existing popup
     const existingPopup = document.querySelector('.attack-popup');
@@ -220,22 +185,21 @@ function renderAttackPopup(stateObj, cellDiv) {
 
     const popup = document.createElement('div');
     popup.className = 'attack-popup';
+    const distance = findTargetDistance(stateObj)
 
     // Add buttons to the popup
     if (stateObj.attackOptions.attack1) {
-        const attack1Button = document.createElement('button');
-        attack1Button.textContent = 'Attack 1';
+        const attack1Button = createAttackButton(stateObj, stateObj.playerArmy[stateObj.selectedUnitIndex].attack1)
         attack1Button.onclick = () => {
-            stateObj = handleAttackButtonClick(stateObj, 'attack1');
+            stateObj = handleAttackButtonClick(stateObj, 'attack1', distance);
         };
         popup.appendChild(attack1Button);
     }
 
     if (stateObj.attackOptions.attack2) {
-        const attack2Button = document.createElement('button');
-        attack2Button.textContent = 'Attack 2';
+        const attack2Button = createAttackButton(stateObj, stateObj.playerArmy[stateObj.selectedUnitIndex].attack2)
         attack2Button.onclick = () => {
-            stateObj = handleAttackButtonClick(stateObj, 'attack2');
+            stateObj = handleAttackButtonClick(stateObj, 'attack2', distance);
         };
         popup.appendChild(attack2Button);
     }
@@ -267,15 +231,16 @@ function handleCellClick(stateObj, index) {
     }
 }
 
-function handleAttackButtonClick(stateObj, attackType) {
+function handleAttackButtonClick(stateObj, attackType, distance) {
     stateObj = immer.produce(stateObj, draft => {
-        const selectedUnit = draft.playerArmy[draft.selectedUnitIndex];
-        const enemyUnit = draft.opponentArmy[draft.targetEnemyIndex];
+        const selectedUnit = stateObj.playerArmy[stateObj.selectedUnitIndex];
+        const enemyUnit = stateObj.opponentArmy[stateObj.targetEnemyIndex];
+        const distance = chebyshevDistance(selectedUnit.currentSquare, enemyUnit.currentSquare)
 
         if (attackType === 'attack1') {
-            stateObj = selectedUnit.attack1.execute(stateObj, enemyUnit.currentSquare);
+            stateObj = selectedUnit.attack1.execute(stateObj, enemyUnit.currentSquare, distance);
         } else if (attackType === 'attack2') {
-            stateObj = selectedUnit.attack2.execute(stateObj, enemyUnit.currentSquare);
+            stateObj = selectedUnit.attack2.execute(stateObj, enemyUnit.currentSquare, distance);
         }
 
         // Clear attack-related state
@@ -439,11 +404,7 @@ function EnemiesMove(stateObj) {
     return stateObj;
 }
 
-function chebyshevDistance(square1, square2) {
-    const x1 = square1 % state.gridSize, y1 = Math.floor(square1 / 5);
-    const x2 = square2 % state.gridSize, y2 = Math.floor(square2 / 5);
-    return Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2));
-}
+
 
 function moveTowardsClosestPlayer(draft, enemy) {
     let closestPlayer = null;
@@ -546,7 +507,4 @@ function findTargetForAttack(draft, enemy, bestAttack) {
     return closestTarget;
 }
 
-function executeAttack(draft, enemy, target, attack) {
-    target.health -= attack.attack;
-    enemy.unitAttackedThisTurn = true;
-}
+

@@ -13,30 +13,47 @@ class BasicWarrior {
         this.unitAttackedThisTurn = false;
         this.moveTowardsClosestEnemy = true;
         this.id = id
+        this.img = 'img/rifleman.png',
 
         this.attack1 = {
-            range: 2,
-            attack: 2,  
-            execute: (stateObj, targetIndex) => {
+            range: 4,
+            attack: 2,
+            name: "Rifle Shot [2]",
+            distanceAccuracyModifier: 0.1,  
+            execute: (stateObj, targetIndex, distance) => {
                 return immer.produce(stateObj, draft => {
                     const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
                     if (targetUnit) {
-                        targetUnit.health -= this.attack1.attack;
-                        this.unitAttackedThisTurn = true;
+                        const hitRoll = Math.random()
+                        const threshold = (distance-1) * this.attack1.distanceAccuracyModifier
+                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+                        if (hitRoll > (threshold)) {
+                            targetUnit.health -= this.attack1.attack;
+                            this.unitAttackedThisTurn = true;
+                        }
+                        
                     }
                 });
             }
         };
 
         this.attack2 = {
-            range: 3, 
-            attack: 1, 
-            execute: (stateObj, targetIndex) => {
+            range: 5, 
+            attack: 1,
+            name: "Distant Shot [1]", 
+            distanceAccuracyModifier: 0.05,
+            execute: (stateObj, targetIndex, distance) => {
                 stateObj = immer.produce(stateObj, draft => {
                     const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
                     if (targetUnit) {
-                        targetUnit.health -= this.attack2.attack;
-                        this.unitAttackedThisTurn = true;
+                        const hitRoll = Math.random()
+                        const threshold = (distance-1) * this.attack2.distanceAccuracyModifier
+                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+                        if (hitRoll > (threshold)) {
+                            targetUnit.health -= this.attack2.attack;
+                            this.unitAttackedThisTurn = true;
+                        }
+                        
                     }
                 });
                 return stateObj
@@ -142,30 +159,47 @@ class closeUpWarrior extends BasicWarrior {
         this.diceToHit = 4;
         this.movementSquares = 2;
         this.moveTowardsClosestEnemy = true;
+        this.img = 'img/shotgun.png',
 
         this.attack1 = {
-            range: 2,
+            range: 4,
             attack: 2,
-            execute: (stateObj, targetIndex) => {
+            name: "Rifle Shot [2]",
+            distanceAccuracyModifier: 0.1,
+            execute: (stateObj, targetIndex, distance) => {
                 return immer.produce(stateObj, draft => {
                     const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
                     if (targetUnit) {
-                        targetUnit.health -= this.attack1.attack;
-                        this.unitAttackedThisTurn = true;
+                        const hitRoll = Math.random()
+                        const threshold = (distance-1) * this.attack1.distanceAccuracyModifier
+                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+                        if (hitRoll > (threshold)) {
+                            targetUnit.health -= this.attack1.attack;
+                            this.unitAttackedThisTurn = true;
+                        }
+                        
                     }
                 });
             }
         };
 
         this.attack2 = {
-            range: 1,
+            range: 2,
             attack: 5,
-            execute: (stateObj, targetIndex) => {
+            distanceAccuracyModifier: 0.3,
+            name: "Shotgun Blast [5]",
+            execute: (stateObj, targetIndex, distance) => {
                 stateObj = immer.produce(stateObj, draft => {
                     const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
                     if (targetUnit) {
-                        targetUnit.health -= this.attack2.attack;
-                        this.unitAttackedThisTurn = true;
+                        const hitRoll = Math.random()
+                        const threshold = (distance-1) * this.attack2.distanceAccuracyModifier
+                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+                        if (hitRoll > (threshold)) {
+                            targetUnit.health -= this.attack2.attack;
+                            this.unitAttackedThisTurn = true;
+                        }
+                        
                     }
                 });
                 return stateObj;
@@ -176,6 +210,7 @@ class closeUpWarrior extends BasicWarrior {
 
 const playerWarrior1 = new BasicWarrior(true, 9, "green", 0);
 const playerWarrior2 = new closeUpWarrior(true, 11, "blue", 1);
+const playerWarrior3 = new closeUpWarrior(true, 13, "blue", 4);
 
 const opponentWarrior1 = new BasicWarrior(false, 41, "red", 2);
 const opponentWarrior2 = new BasicWarrior(false, 43, "red", 3);
