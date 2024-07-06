@@ -8,12 +8,15 @@ let state = {
     attackRangeSquares1: [],
     attackRangeSquares2: [],
     selectedUnitIndex: null,
+    gridSize: 7,
     grid: [
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
     ],
     showAttackPopup: false,
     attackPopupPosition: null,
@@ -21,7 +24,8 @@ let state = {
         attack1: false,
         attack2: false
     },
-    targetEnemyIndex: null
+    targetEnemyIndex: null,
+    currentUnitID: 4,
 };
 
 
@@ -37,8 +41,13 @@ function createEndTurnButton(stateObj) {
 }
 
 function handleEndTurn(stateObj) {
-    return immer.produce(stateObj, draft => {
+    stateObj = immer.produce(stateObj, draft => {
         draft.playerArmy.forEach(unit => {
+            unit.unitMovedThisTurn = false;
+            unit.unitAttackedThisTurn = false;
+        });
+
+        draft.opponentArmy.forEach(unit => {
             unit.unitMovedThisTurn = false;
             unit.unitAttackedThisTurn = false;
         });
@@ -48,6 +57,9 @@ function handleEndTurn(stateObj) {
         draft.selectedUnitIndex = null;
         draft.currentScreen = "normalScreen";
     });
+
+    stateObj = EnemiesMove(stateObj)
+    return stateObj
 }
 
 
@@ -381,3 +393,160 @@ function updateState(stateObj) {
 
 updateState(state)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function EnemiesMove(stateObj) {
+    for (let i = 0; i < stateObj.opponentArmy.length; i++) {
+        stateObj = immer.produce(stateObj, draft => {
+            const currentEnemy = draft.opponentArmy.find(e => e.id === stateObj.opponentArmy[i].id);
+            
+            // Move the enemy
+            if (currentEnemy.moveTowardsClosestEnemy) {
+                moveTowardsClosestPlayer(draft, currentEnemy);
+            } else {
+                moveAwayFromAllPlayers(draft, currentEnemy);
+            }
+
+            // Attack if possible
+            const bestAttack = getBestAttack(currentEnemy);
+            const targetUnit = findTargetForAttack(draft, currentEnemy, bestAttack);
+            if (targetUnit) {
+                executeAttack(draft, currentEnemy, targetUnit, bestAttack);
+            }
+
+            // Update the grid after each enemy's move and attack
+            updateGrid(draft);
+        });
+
+        // Update the state after each enemy's turn
+        stateObj = updateState(stateObj);
+    }
+
+    return stateObj;
+}
+
+function chebyshevDistance(square1, square2) {
+    const x1 = square1 % state.gridSize, y1 = Math.floor(square1 / 5);
+    const x2 = square2 % state.gridSize, y2 = Math.floor(square2 / 5);
+    return Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2));
+}
+
+function moveTowardsClosestPlayer(draft, enemy) {
+    let closestPlayer = null;
+    let minDistance = Infinity;
+
+    draft.playerArmy.forEach(player => {
+        const distance = chebyshevDistance(enemy.currentSquare, player.currentSquare);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestPlayer = player;
+        }
+    });
+
+    if (closestPlayer) {
+        const possibleMoves = getPossibleMoves(draft, enemy);
+        let bestMove = enemy.currentSquare;
+        let bestMoveDistance = minDistance;
+
+        possibleMoves.forEach(move => {
+            const distance = chebyshevDistance(move, closestPlayer.currentSquare);
+            if (distance < bestMoveDistance) {
+                bestMoveDistance = distance;
+                bestMove = move;
+            }
+        });
+        enemy.currentSquare = bestMove;
+    }
+}
+
+function moveAwayFromAllPlayers(draft, enemy) {
+    const possibleMoves = getPossibleMoves(draft, enemy);
+    let bestMove = enemy.currentSquare;
+    let maxMinDistance = 0;
+
+    possibleMoves.forEach(move => {
+        let minDistance = Infinity;
+        draft.playerArmy.forEach(player => {
+            const distance = chebyshevDistance(move, player.currentSquare);
+            if (distance < minDistance) {
+                minDistance = distance;
+            }
+        });
+        if (minDistance > maxMinDistance) {
+            maxMinDistance = minDistance;
+            bestMove = move;
+        }
+    });
+
+    enemy.currentSquare = bestMove;
+}
+
+function getPossibleMoves(draft, unit) {
+    const possibleMoves = [];
+    const currentX = unit.currentSquare % draft.gridSize;
+    const currentY = Math.floor(unit.currentSquare / draft.gridSize);
+
+    for (let dx = -unit.movementSquares; dx <= unit.movementSquares; dx++) {
+        for (let dy = -unit.movementSquares; dy <= unit.movementSquares; dy++) {
+            const newX = currentX + dx;
+            const newY = currentY + dy;
+            const newSquare = newY * draft.gridSize + newX;
+
+            if (newX >= 0 && newX < draft.gridSize && newY >= 0 && newY < draft.gridSize && 
+                draft.grid[newSquare] === 0) {
+                possibleMoves.push(newSquare);
+            }
+        }
+    }
+
+    return possibleMoves;
+}
+
+function getBestAttack(enemy) {
+    return enemy.attack1.attack > enemy.attack2.attack ? enemy.attack1 : enemy.attack2;
+}
+
+function findTargetForAttack(draft, enemy, bestAttack) {
+    let closestTarget = null;
+    let minDistance = Infinity;
+
+    draft.playerArmy.forEach(player => {
+        const distance = chebyshevDistance(enemy.currentSquare, player.currentSquare);
+        if (distance <= bestAttack.range && distance < minDistance) {
+            minDistance = distance;
+            closestTarget = player;
+        }
+    });
+
+    if (!closestTarget) {
+        const otherAttack = bestAttack === enemy.attack1 ? enemy.attack2 : enemy.attack1;
+        draft.playerArmy.forEach(player => {
+            const distance = chebyshevDistance(enemy.currentSquare, player.currentSquare);
+            if (distance <= otherAttack.range && distance < minDistance) {
+                minDistance = distance;
+                closestTarget = player;
+            }
+        });
+    }
+
+    return closestTarget;
+}
+
+function executeAttack(draft, enemy, target, attack) {
+    target.health -= attack.attack;
+    enemy.unitAttackedThisTurn = true;
+}

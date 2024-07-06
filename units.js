@@ -1,5 +1,6 @@
+
 class BasicWarrior {
-    constructor(isPlayerOwned = true, unitCurrentSquare = 0, color = "black") {
+    constructor(isPlayerOwned = true, unitCurrentSquare = 0, color = "black", id=0) {
         this.type = 'warrior';
         this.health = 5;
         this.attack = 2;
@@ -10,6 +11,8 @@ class BasicWarrior {
         this.color = color;
         this.unitMovedThisTurn = false;
         this.unitAttackedThisTurn = false;
+        this.moveTowardsClosestEnemy = true;
+        this.id = id
 
         this.attack1 = {
             range: 2,
@@ -26,8 +29,8 @@ class BasicWarrior {
         };
 
         this.attack2 = {
-            range: 1, 
-            attack: 5, 
+            range: 3, 
+            attack: 1, 
             execute: (stateObj, targetIndex) => {
                 stateObj = immer.produce(stateObj, draft => {
                     const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
@@ -45,8 +48,7 @@ class BasicWarrior {
         if (!this.playerOwned || (this.unitMovedThisTurn && this.unitAttackedThisTurn)) return stateObj;
 
         let newState = immer.produce(stateObj, draft => {
-            const gridSize = 5; // Assuming a 5x5 grid
-            const { movableSquares, attackRangeSquares1, attackRangeSquares2  } = this.getMovableSquares(gridSize);
+            const { movableSquares, attackRangeSquares1, attackRangeSquares2  } = this.getMovableSquares(stateObj.gridSize);
 
             if (!this.unitMovedThisTurn) {
                 draft.movableSquares = movableSquares.filter(square => {
@@ -131,9 +133,50 @@ class BasicWarrior {
     }
 }
 
-const playerWarrior1 = new BasicWarrior(true, 20, "green");
-const playerWarrior2 = new BasicWarrior(true, 3, "green");
+class closeUpWarrior extends BasicWarrior {
+    constructor(isPlayerOwned = true, unitCurrentSquare = 0, color = "red", id = 1) {
+        super(isPlayerOwned, unitCurrentSquare, color, id);
+        this.type = 'advancedWarrior';
+        this.health = 4;
+        this.attack = 3;
+        this.diceToHit = 4;
+        this.movementSquares = 2;
+        this.moveTowardsClosestEnemy = true;
 
-const opponentWarrior1 = new BasicWarrior(false, 21, "red");
-const opponentWarrior2 = new BasicWarrior(false, 23, "red");
+        this.attack1 = {
+            range: 2,
+            attack: 2,
+            execute: (stateObj, targetIndex) => {
+                return immer.produce(stateObj, draft => {
+                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
+                    if (targetUnit) {
+                        targetUnit.health -= this.attack1.attack;
+                        this.unitAttackedThisTurn = true;
+                    }
+                });
+            }
+        };
+
+        this.attack2 = {
+            range: 1,
+            attack: 5,
+            execute: (stateObj, targetIndex) => {
+                stateObj = immer.produce(stateObj, draft => {
+                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
+                    if (targetUnit) {
+                        targetUnit.health -= this.attack2.attack;
+                        this.unitAttackedThisTurn = true;
+                    }
+                });
+                return stateObj;
+            }
+        };
+    }
+}
+
+const playerWarrior1 = new BasicWarrior(true, 9, "green", 0);
+const playerWarrior2 = new closeUpWarrior(true, 11, "blue", 1);
+
+const opponentWarrior1 = new BasicWarrior(false, 41, "red", 2);
+const opponentWarrior2 = new BasicWarrior(false, 43, "red", 3);
 
