@@ -264,6 +264,63 @@ class minigunWarrior extends BasicWarrior {
     }
 }
 
+class speederBike extends BasicWarrior {
+    constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
+        super(isPlayerOwned, id, color, unitCurrentSquare);
+        this.type = 'advancedWarrior';
+        this.health = 7;
+        this.color = color;
+        this.movementSquares = 3;
+        this.points = 8;
+        this.moveTowardsClosestEnemy = true;
+        this.img = 'img/bike.png',
+
+        this.attack1 = {
+            range: 1,
+            attack: 6,
+            name: "Splatter - 6",
+            distanceAccuracyModifier: 0.3,
+            execute: (stateObj, targetIndex, distance) => {
+                return immer.produce(stateObj, draft => {
+                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
+                    if (targetUnit) {
+                        const hitRoll = Math.random()
+                        const threshold = (distance-1) * this.attack1.distanceAccuracyModifier
+                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+                        if (hitRoll > (threshold)) {
+                            targetUnit.health -= this.attack1.attack;
+                        }
+                        this.unitAttackedThisTurn = true;
+                    }
+                });
+            }
+        };
+
+        this.attack2 = {
+            range: 4,
+            attack: 4,
+            distanceAccuracyModifier: 0.2,
+            name: "Front Guns - 4",
+            execute: (stateObj, targetIndex, distance) => {
+                stateObj = immer.produce(stateObj, draft => {
+                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
+                    if (targetUnit) {
+                        const hitRoll = Math.random()
+                        const threshold = (distance-1) * this.attack2.distanceAccuracyModifier
+                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+                        if (hitRoll > (threshold)) {
+                            targetUnit.health -= this.attack2.attack;
+                        }
+                        this.unitAttackedThisTurn = true;
+                        
+                    }
+                });
+                return stateObj;
+            }
+        };
+    }
+}
+
 function getRandomNumbersInRange(x, y, arraySize) {
     const uniqueNumbers = new Set();
 
@@ -275,15 +332,17 @@ function getRandomNumbersInRange(x, y, arraySize) {
     return Array.from(uniqueNumbers);
 }
 
-const playerLocations = getRandomNumbersInRange(0, 16, 3)
-const opponentLocations = getRandomNumbersInRange(47, 63, 3)
+const playerLocations = getRandomNumbersInRange(0, 16, 4)
+const opponentLocations = getRandomNumbersInRange(47, 63, 4)
 console.log("player locatios " + playerLocations + " and opponents " + opponentLocations)
 
 const playerWarrior1 = new BasicWarrior(true, 0, "green", playerLocations[0]);
-const playerWarrior2 = new closeUpWarrior(true, 1, "blue", playerLocations[1]);
-const playerWarrior3 = new minigunWarrior(true, 2, "gold", playerLocations[2]);
+const playerWarrior2 = new closeUpWarrior(true, 1, "green", playerLocations[1]);
+const playerWarrior3 = new minigunWarrior(true, 2, "green", playerLocations[2]);
+const playerWarrior4 = new speederBike(true, 3, "gold", playerLocations[3]);
 
-const opponentWarrior1 = new BasicWarrior(false, 3, "red",  opponentLocations[0]);
-const opponentWarrior2 = new BasicWarrior(false, 4, "red", opponentLocations[1]);
-const opponentWarrior3 = new BasicWarrior(false, 5, "red", opponentLocations[2]);
+const opponentWarrior1 = new BasicWarrior(false, 4, "red",  opponentLocations[0]);
+const opponentWarrior2 = new BasicWarrior(false, 5, "red", opponentLocations[1]);
+const opponentWarrior3 = new BasicWarrior(false, 6, "red", opponentLocations[2]);
+const opponentWarrior4 = new BasicWarrior(false, 7, "red", opponentLocations[3]);
 
