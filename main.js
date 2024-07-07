@@ -375,10 +375,9 @@ function EnemiesMove(stateObj) {
             }
 
             // Attack if possible
-            const bestAttack = getBestAttack(currentEnemy);
-            const targetUnit = findTargetForAttack(draft, currentEnemy, bestAttack);
-            if (targetUnit) {
-                executeAttack(draft, currentEnemy, targetUnit, bestAttack);
+            const attackInfo = findTargetForAttack(draft, currentEnemy);
+            if (attackInfo) {
+                executeAttack(draft, currentEnemy, attackInfo.target, attackInfo.attack);
             }
 
             // Update the grid after each enemy's move and attack
@@ -464,35 +463,53 @@ function getPossibleMoves(draft, unit) {
 
     return possibleMoves;
 }
+function getBestAttack(enemy, target) {
+    const attack1Kills = enemy.attack1.attack >= target.health;
+    const attack2Kills = enemy.attack2.attack >= target.health;
 
-function getBestAttack(enemy) {
-    return enemy.attack1.attack > enemy.attack2.attack ? enemy.attack1 : enemy.attack2;
+    if (attack1Kills && attack2Kills) {
+        return enemy.attack1.distanceAccuracyModifier < enemy.attack2.distanceAccuracyModifier ? enemy.attack1 : enemy.attack2;
+    } else if (attack1Kills) {
+        return enemy.attack1;
+    } else if (attack2Kills) {
+        return enemy.attack2;
+    } else {
+        return enemy.attack1.attack > enemy.attack2.attack ? enemy.attack1 : enemy.attack2;
+    }
 }
 
-function findTargetForAttack(draft, enemy, bestAttack) {
+function findTargetForAttack(draft, enemy) {
+    let potentialTargets = [];
     let closestTarget = null;
     let minDistance = Infinity;
 
     draft.playerArmy.forEach(player => {
         const distance = chebyshevDistance(enemy.currentSquare, player.currentSquare);
-        if (distance <= bestAttack.range && distance < minDistance) {
+        const attack1Kills = enemy.attack1.attack >= player.health && distance <= enemy.attack1.range;
+        const attack2Kills = enemy.attack2.attack >= player.health && distance <= enemy.attack2.range;
+
+        if (attack1Kills || attack2Kills) {
+            potentialTargets.push({ player, distance });
+        }
+
+        if (distance < minDistance && (distance <= enemy.attack1.range || distance <= enemy.attack2.range)) {
             minDistance = distance;
             closestTarget = player;
         }
     });
 
-    if (!closestTarget) {
-        const otherAttack = bestAttack === enemy.attack1 ? enemy.attack2 : enemy.attack1;
-        draft.playerArmy.forEach(player => {
-            const distance = chebyshevDistance(enemy.currentSquare, player.currentSquare);
-            if (distance <= otherAttack.range && distance < minDistance) {
-                minDistance = distance;
-                closestTarget = player;
-            }
-        });
+    if (potentialTargets.length > 0) {
+        // Sort potential targets by distance
+        potentialTargets.sort((a, b) => a.distance - b.distance);
+        const target = potentialTargets[0].player;
+        const bestAttack = getBestAttack(enemy, target);
+        return { target, attack: bestAttack };
+    } else if (closestTarget) {
+        const bestAttack = enemy.attack1.range >= minDistance ? enemy.attack1 : enemy.attack2;
+        return { target: closestTarget, attack: bestAttack };
     }
 
-    return closestTarget;
+    return null; // No valid target found
 }
 
 
