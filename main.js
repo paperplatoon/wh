@@ -93,6 +93,7 @@ function renderGrid(stateObj) {
             healthDiv = createHealthText(cell)
             cellDiv.appendChild(avatar)
             cellDiv.appendChild(healthDiv)
+            cellDiv.style.backgroundColor = cell.color
             cellDiv.addEventListener('click', () => handleCellClick(stateObj, index));
         };
         gridContainer.appendChild(cellDiv);
@@ -120,6 +121,7 @@ function renderGlowingSquares(stateObj) {
             const healthDiv = createHealthText(cell)
             cellDiv.appendChild(avatar)
             cellDiv.appendChild(healthDiv)
+            cellDiv.style.backgroundColor = cell.color
         }
         
         if (stateObj.attackRangeSquares1.includes(index) || stateObj.attackRangeSquares2.includes(index)) {
@@ -148,28 +150,17 @@ function renderGlowingSquares(stateObj) {
     appDiv.appendChild(gridContainer);
 }
 
-function calculatePopupPosition(index, popupWidth, popupHeight) {
-    const gridContainer = document.querySelector('.grid-container');
-    const gridRect = gridContainer.getBoundingClientRect();
-    const cellWidth = gridRect.width / 5; // 5 columns
-    const cellHeight = gridRect.height / 5; // 5 rows
+function calculatePopupPosition(index) {
+    const row = Math.floor(index / state.gridSize) - 1;
+    const col = index % state.gridSize - 1;
 
-    const row = Math.floor(index / 5);
-    const col = index % 5;
+    let insertSize = (state.attackOptions.attack1 && state.attackOptions.attack2) ? ((80/state.gridSize)/2) : ((80/state.gridSize)) 
 
-    const cellX = gridRect.left + (col * cellWidth);
-    const cellY = gridRect.top + (row * cellHeight);
-
-    // Center the popup horizontally over the cell
-    let popupX = cellX + (cellWidth / 2) - (popupWidth / 2);
-    // Position the popup above the cell
-    let popupY = cellY - popupHeight - 10; // 10px extra space
-
-    // Ensure the popup doesn't go off-screen
-    popupX = Math.max(10, Math.min(popupX, window.innerWidth - popupWidth - 10));
-    popupY = Math.max(10, popupY);
-
-    return { x: popupX, y: popupY };
+    const locationX = 10 + insertSize + (col * (80/state.gridSize));
+    const locationY = ((80/state.gridSize)/2) + (row * (80/state.gridSize));
+    
+    console.log ("X = " + locationX + "; Y = " + locationY + "; ")
+    return { x: locationX, y: locationY };
 }
 
 
@@ -203,18 +194,15 @@ function renderAttackPopup(stateObj, cellDiv) {
         };
         popup.appendChild(attack2Button);
     }
-
-    // Append the popup to the body so we can measure its size
-    document.body.appendChild(popup);
-
-    // Calculate the position after the popup is in the DOM
-    const popupRect = popup.getBoundingClientRect();
-    const position = calculatePopupPosition(stateObj.attackPopupPosition, popupRect.width, popupRect.height);
+    
+    const position = calculatePopupPosition(stateObj.attackPopupPosition);
 
     // Set the calculated position
     popup.style.position = 'absolute';
-    popup.style.left = `${position.x}px`;
-    popup.style.top = `${position.y}px`;
+    popup.style.left = `${position.x}vw`;
+    popup.style.top = `${position.y}vh`;
+
+    document.body.appendChild(popup);
 }
 
 function handleCellClick(stateObj, index) {

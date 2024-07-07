@@ -3,8 +3,8 @@
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: repeat(7, 1fr);
     gap: 2px;
-    width: 50vmin; /* Adjust as needed */
-    height: 50vmin; /* Adjust as needed */
+    width: 80vw; /* Adjust as needed */
+    height: 80vh; /* Adjust as needed */
     margin: 0 auto;
 }
 
@@ -75,10 +75,14 @@
     padding: 10px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap; /* Ensure the content doesn't wrap */
 }
 
 .attack-popup button {
-    margin: 0 5px;
+    margin: 0 3px;
     padding: 5px 10px;
     cursor: pointer;
 }
