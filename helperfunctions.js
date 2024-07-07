@@ -46,6 +46,12 @@ function chebyshevDistance(square1, square2) {
 }
 
 function executeAttack(draft, enemy, target, attack) {
-    target.health -= attack.attack;
+    const hitRoll = Math.random()
+    const distance = chebyshevDistance(enemy.currentSquare, target.currentSquare)
+    const threshold = (distance-1) * attack.distanceAccuracyModifier
+    console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+    if (hitRoll > (threshold)) {
+        target.health -= attack.attack;
+    }
     enemy.unitAttackedThisTurn = true;
 }

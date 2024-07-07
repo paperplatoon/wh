@@ -2,7 +2,7 @@
 class BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color = "white", unitCurrentSquare=0) {
         this.type = 'warrior';
-        this.health = 4;
+        this.health = 5;
         this.points = 2;
         this.movementSquares = 2; 
         this.playerOwned = isPlayerOwned;
@@ -153,7 +153,7 @@ class closeUpWarrior extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
-        this.health = 3;
+        this.health = 4;
         this.color = color;
         this.movementSquares = 2;
         this.points = 2;
@@ -211,7 +211,7 @@ class minigunWarrior extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
-        this.health = 6;
+        this.health = 8;
         this.color = color;
         this.movementSquares = 1;
         this.points = 4;

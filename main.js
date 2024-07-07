@@ -126,8 +126,7 @@ function renderGlowingSquares(stateObj) {
             cellDiv.addEventListener('click', () => {
                 stateObj = handleMoveToSquare(stateObj, index);
                 if (stateObj.showAttackPopup) {
-                    console.log("rendering attack popup")
-                    renderAttackPopup(stateObj, cellDiv);
+                    renderAttackPopup(stateObj);
                 }
             });
         } else if (stateObj.movableSquares.includes(index)) {
@@ -154,9 +153,11 @@ function calculatePopupPosition(index) {
     let insertSize = (state.attackOptions.attack1 && state.attackOptions.attack2) ? ((80/state.gridSize)/2) : ((80/state.gridSize)) 
 
     const locationX = 10 + insertSize + (col * (80/state.gridSize));
-    const locationY = ((80/state.gridSize)/2) + (row * (80/state.gridSize));
+    let locationY = ((80/state.gridSize)/2) + (row * (80/state.gridSize));
+    if (row < 0) {
+        locationY = (80/state.gridSize) + 3;
+    }
     
-    console.log ("X = " + locationX + "; Y = " + locationY + "; ")
     return { x: locationX, y: locationY };
 }
 
@@ -164,7 +165,7 @@ function calculatePopupPosition(index) {
 
 
 
-function renderAttackPopup(stateObj, cellDiv) {
+function renderAttackPopup(stateObj) {
     // Remove any existing popup
     const existingPopup = document.querySelector('.attack-popup');
     if (existingPopup) {
@@ -266,7 +267,6 @@ function handleMoveToSquare(stateObj, index) {
             const inRange2 = draft.attackRangeSquares2.includes(index);
 
             if (inRange1 || inRange2) {
-                console.log("setting attack popup to true") 
                 draft.showAttackPopup = true;
                 draft.attackPopupPosition = index;
                 draft.attackOptions = {
