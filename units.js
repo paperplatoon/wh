@@ -3,7 +3,8 @@ class BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color = "white", unitCurrentSquare=0) {
         this.type = 'warrior';
         this.health = 4;
-        this.movementSquares = 1; 
+        this.points = 2;
+        this.movementSquares = 2; 
         this.playerOwned = isPlayerOwned;
         this.color = color;
         this.unitMovedThisTurn = false;
@@ -155,6 +156,7 @@ class closeUpWarrior extends BasicWarrior {
         this.health = 3;
         this.color = color;
         this.movementSquares = 2;
+        this.points = 2;
         this.moveTowardsClosestEnemy = true;
         this.img = 'img/shotgun.png',
 
@@ -204,6 +206,64 @@ class closeUpWarrior extends BasicWarrior {
     }
 }
 
+//SUPPRESSIVE FIRE ATTACK
+class minigunWarrior extends BasicWarrior {
+    constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
+        super(isPlayerOwned, id, color, unitCurrentSquare);
+        this.type = 'advancedWarrior';
+        this.health = 6;
+        this.color = color;
+        this.movementSquares = 1;
+        this.points = 4;
+        this.moveTowardsClosestEnemy = true;
+        this.img = 'img/minigun.png',
+
+        this.attack1 = {
+            range: 4,
+            attack: 2,
+            name: "Rifle Shot - 2",
+            distanceAccuracyModifier: 0.15,
+            execute: (stateObj, targetIndex, distance) => {
+                return immer.produce(stateObj, draft => {
+                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
+                    if (targetUnit) {
+                        const hitRoll = Math.random()
+                        const threshold = (distance-1) * this.attack1.distanceAccuracyModifier
+                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+                        if (hitRoll > (threshold)) {
+                            targetUnit.health -= this.attack1.attack;
+                        }
+                        this.unitAttackedThisTurn = true;
+                    }
+                });
+            }
+        };
+
+        this.attack2 = {
+            range: 3,
+            attack: 3,
+            distanceAccuracyModifier: 0.2,
+            name: "Minigun - 3",
+            execute: (stateObj, targetIndex, distance) => {
+                stateObj = immer.produce(stateObj, draft => {
+                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
+                    if (targetUnit) {
+                        const hitRoll = Math.random()
+                        const threshold = (distance-1) * this.attack2.distanceAccuracyModifier
+                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
+                        if (hitRoll > (threshold)) {
+                            targetUnit.health -= this.attack2.attack;
+                        }
+                        this.unitAttackedThisTurn = true;
+                        
+                    }
+                });
+                return stateObj;
+            }
+        };
+    }
+}
+
 function getRandomNumbersInRange(x, y, arraySize) {
     const uniqueNumbers = new Set();
 
@@ -215,13 +275,13 @@ function getRandomNumbersInRange(x, y, arraySize) {
     return Array.from(uniqueNumbers);
 }
 
-const playerLocations = getRandomNumbersInRange(0, 13, 3)
-const opponentLocations = getRandomNumbersInRange(35, 48, 3)
+const playerLocations = getRandomNumbersInRange(0, 16, 3)
+const opponentLocations = getRandomNumbersInRange(47, 63, 3)
 console.log("player locatios " + playerLocations + " and opponents " + opponentLocations)
 
 const playerWarrior1 = new BasicWarrior(true, 0, "green", playerLocations[0]);
 const playerWarrior2 = new closeUpWarrior(true, 1, "blue", playerLocations[1]);
-const playerWarrior3 = new closeUpWarrior(true, 2, "blue", playerLocations[2]);
+const playerWarrior3 = new minigunWarrior(true, 2, "gold", playerLocations[2]);
 
 const opponentWarrior1 = new BasicWarrior(false, 3, "red",  opponentLocations[0]);
 const opponentWarrior2 = new BasicWarrior(false, 4, "red", opponentLocations[1]);

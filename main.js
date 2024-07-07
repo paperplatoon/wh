@@ -8,15 +8,16 @@ let state = {
     attackRangeSquares1: [],
     attackRangeSquares2: [],
     selectedUnitIndex: null,
-    gridSize: 7,
+    gridSize: 8,
     grid: [
-        0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
     ],
     showAttackPopup: false,
     attackPopupPosition: null,
@@ -86,9 +87,7 @@ function renderGrid(stateObj) {
         const cellDiv = document.createElement('div');
         cellDiv.className = 'grid-cell';
 
-        if (cell === 0) {
-            cellDiv.style.backgroundColor = 'white';
-        } else {
+        if (cell !== 0) {
             const avatar = createImageAvatar(cell)
             healthDiv = createHealthText(cell)
             cellDiv.appendChild(avatar)
@@ -114,9 +113,7 @@ function renderGlowingSquares(stateObj) {
         const cellDiv = document.createElement('div');
         cellDiv.className = 'grid-cell';
         
-        if (cell === 0) {
-            cellDiv.style.backgroundColor = 'white';
-        } else {
+        if (cell !== 0) {
             const avatar = createImageAvatar(cell)
             const healthDiv = createHealthText(cell)
             cellDiv.appendChild(avatar)

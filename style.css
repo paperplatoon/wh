@@ -1,17 +1,28 @@
+#app {
+    background-image: url('img/terrain.png'); /* Path to your background image */
+    background-size: cover; /* Ensure the image covers the entire div */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; 
+    width: 96vw;
+    height: 96vh; 
+    z-index: -1;
+}
+
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(7, 1fr);
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     gap: 2px;
     width: 80vw; /* Adjust as needed */
     height: 80vh; /* Adjust as needed */
     margin: 0 auto;
+    z-index: 1;
 }
 
 .grid-cell {
     width: 100%;
     height: 100%;
-    border: 1px solid #ccc;
+    border: 3px solid black;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -24,6 +35,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+    z-index: 1;
 }
 
 .health-text {
@@ -34,6 +46,7 @@
     color: red;
     font-size: 3vmin;
     background-color: rgba(255, 255, 255, 0.7); /* Background for readability */
+    z-index: 3;
 }
 
 
@@ -94,3 +107,4 @@
     text-align: center;
     background-color: rgba(255, 255, 255, 0.7); /* Background for readability */
 }
+
