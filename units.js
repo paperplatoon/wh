@@ -3,22 +3,20 @@ class BasicWarrior {
     constructor(isPlayerOwned = true, unitCurrentSquare = 0, color = "black", id=0) {
         this.type = 'warrior';
         this.health = 5;
-        this.attack = 2;
-        this.diceToHit = 3;
         this.movementSquares = 1; 
         this.playerOwned = isPlayerOwned;
         this.currentSquare = unitCurrentSquare;
         this.color = color;
         this.unitMovedThisTurn = false;
         this.unitAttackedThisTurn = false;
-        this.moveTowardsClosestEnemy = true;
+        this.moveTowardsClosestEnemy = false;
         this.id = id
         this.img = 'img/rifleman.png',
 
         this.attack1 = {
             range: 4,
             attack: 2,
-            name: "Rifle Shot [2]",
+            name: "Rifle Shot - 2",
             distanceAccuracyModifier: 0.1,  
             execute: (stateObj, targetIndex, distance) => {
                 return immer.produce(stateObj, draft => {
@@ -40,7 +38,7 @@ class BasicWarrior {
         this.attack2 = {
             range: 5, 
             attack: 1,
-            name: "Distant Shot [1]", 
+            name: "Distant Shot - 1", 
             distanceAccuracyModifier: 0.05,
             execute: (stateObj, targetIndex, distance) => {
                 stateObj = immer.produce(stateObj, draft => {
@@ -154,9 +152,7 @@ class closeUpWarrior extends BasicWarrior {
     constructor(isPlayerOwned = true, unitCurrentSquare = 0, color = "red", id = 1) {
         super(isPlayerOwned, unitCurrentSquare, color, id);
         this.type = 'advancedWarrior';
-        this.health = 4;
-        this.attack = 3;
-        this.diceToHit = 4;
+        this.health = 3;
         this.movementSquares = 2;
         this.moveTowardsClosestEnemy = true;
         this.img = 'img/shotgun.png',
@@ -164,7 +160,7 @@ class closeUpWarrior extends BasicWarrior {
         this.attack1 = {
             range: 4,
             attack: 2,
-            name: "Rifle Shot [2]",
+            name: "Rifle Shot - 2",
             distanceAccuracyModifier: 0.1,
             execute: (stateObj, targetIndex, distance) => {
                 return immer.produce(stateObj, draft => {
@@ -187,7 +183,7 @@ class closeUpWarrior extends BasicWarrior {
             range: 2,
             attack: 5,
             distanceAccuracyModifier: 0.3,
-            name: "Shotgun Blast [5]",
+            name: "Shotgun Blast - 5",
             execute: (stateObj, targetIndex, distance) => {
                 stateObj = immer.produce(stateObj, draft => {
                     const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
@@ -208,10 +204,11 @@ class closeUpWarrior extends BasicWarrior {
     }
 }
 
-const playerWarrior1 = new BasicWarrior(true, 9, "green", 0);
+const playerWarrior1 = new BasicWarrior(true, 2, "green", 0);
 const playerWarrior2 = new closeUpWarrior(true, 11, "blue", 1);
-const playerWarrior3 = new closeUpWarrior(true, 13, "blue", 4);
+const playerWarrior3 = new closeUpWarrior(true, 13, "blue", 2);
 
-const opponentWarrior1 = new BasicWarrior(false, 41, "red", 2);
-const opponentWarrior2 = new BasicWarrior(false, 43, "red", 3);
+const opponentWarrior1 = new BasicWarrior(false, 41, "red", 3);
+const opponentWarrior2 = new BasicWarrior(false, 43, "red", 4);
+const opponentWarrior3 = new BasicWarrior(false, 45, "red", 5);
 

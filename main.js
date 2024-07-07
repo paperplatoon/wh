@@ -3,7 +3,7 @@ let state = {
     playerTurn: true,
     turnCounter: 0,
     playerArmy: [playerWarrior1, playerWarrior2, playerWarrior3],
-    opponentArmy: [opponentWarrior1, opponentWarrior2],
+    opponentArmy: [opponentWarrior1, opponentWarrior2, opponentWarrior3],
     movableSquares: [],
     attackRangeSquares1: [],
     attackRangeSquares2: [],
