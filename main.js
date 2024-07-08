@@ -16,7 +16,6 @@ let state = {
     currentUnitID: 4,
 };
 
-
 function handleEndTurn(stateObj) {
     stateObj = immer.produce(stateObj, draft => {
         resetUnitTurnStatus(draft.playerArmy);
@@ -42,20 +41,6 @@ function updateGrid(stateObj) {
         updateGridWithUnits(draft.opponentArmy);
     });
 }
-
-function createGridCell(cell, index, stateObj) {
-    const cellDiv = document.createElement('div');
-    cellDiv.className = 'grid-cell';
-    if (cell !== 0) {
-        const avatar = createImageAvatar(cell);
-        const healthDiv = createHealthText(cell);
-        cellDiv.appendChild(avatar);
-        cellDiv.appendChild(healthDiv);
-        cellDiv.style.backgroundColor = cell.color;
-        cellDiv.addEventListener('click', () => handleCellClick(stateObj, index));
-    }
-    return cellDiv;
-}
   
 function renderGrid(stateObj) {
     const appDiv = document.getElementById('app');
@@ -64,7 +49,6 @@ function renderGrid(stateObj) {
     if (existingPopup) {
         existingPopup.remove();
     }
-
 
     const gridContainer = document.createElement('div');
     gridContainer.className = 'grid-container';
@@ -179,13 +163,13 @@ function renderAttackPopup(stateObj) {
 
 function handleCellClick(stateObj, index) {
     const clickedUnit = stateObj.playerArmy.find(unit => unit.currentSquare === index);
-    if (clickedUnit && (!clickedUnit.unitMovedThisTurn ||  !clickedUnit.unitAttackedThisTurn) ) {
-        stateObj = clickedUnit.whenClicked(stateObj);
-        if (!clickedUnit.unitMovedThisTurn || (!clickedUnit.unitAttackedThisTurn && (stateObj.attackRangeSquares.length > 0))) {
+    if (clickedUnit && (!clickedUnit.unitMovedThisTurn || !clickedUnit.unitAttackedThisTurn)) {
+        stateObj = whenUnitClicked(stateObj, clickedUnit);
+        if (!clickedUnit.unitMovedThisTurn || (!clickedUnit.unitAttackedThisTurn && stateObj.attackRangeSquares.length > 0)) {
             stateObj = immer.produce(stateObj, draft => {
                 draft.selectedUnitIndex = draft.playerArmy.indexOf(clickedUnit);
                 draft.currentScreen = "chooseSquareToMove";
-            })
+            });
         }
         renderScreen(stateObj);
     }
@@ -194,11 +178,9 @@ function handleCellClick(stateObj, index) {
 function handleAttackButtonClick(stateObj, attackOptionsIndex) {
     const selectedUnit = stateObj.playerArmy[stateObj.selectedUnitIndex];
     const targetIndex = stateObj.targetEnemyIndex
-
     const attackIndex = selectedUnit.attacks.indexOf(stateObj.attackOptions[attackOptionsIndex])
 
-    stateObj = selectedUnit.executeAttack(stateObj, attackIndex, targetIndex);
-
+    stateObj = executeAttack(stateObj, selectedUnit, attackIndex, targetIndex);
     stateObj = immer.produce(stateObj, draft => {
         setBackToNormal(draft);
     });

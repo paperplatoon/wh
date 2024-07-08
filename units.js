@@ -11,6 +11,7 @@ class BasicWarrior {
         this.moveTowardsClosestEnemy = false;
         this.currentSquare = unitCurrentSquare;
         this.id = id;
+        this.mark = 0;
         this.img = 'img/rifleman.png';
         this.attacks = [
             {
@@ -22,125 +23,12 @@ class BasicWarrior {
             },
             {
                 name: "Aimed Shot - 1",
-                range: 4,
+                range: 6,
                 effects: [
                     { type: 'damage', amount: 1, accuracyModifier: 0.1 }
                 ]
             },
         ];
-    }
-
-    whenClicked(stateObj) {
-        if (!this.playerOwned || (this.unitMovedThisTurn && this.unitAttackedThisTurn)) return stateObj;
-
-        return immer.produce(stateObj, draft => {
-            const { movableSquares, attackRangeSquares } = this.getActionSquares(stateObj.gridSize);
-
-            if (!this.unitMovedThisTurn) {
-                draft.movableSquares = movableSquares.filter(square => 
-                    square >= 0 && square < draft.grid.length && draft.grid[square] === 0
-                );
-            }
-
-            if (!this.unitAttackedThisTurn) {
-                draft.attackRangeSquares = attackRangeSquares.filter(square => 
-                    square >= 0 && square < draft.grid.length && 
-                    draft.opponentArmy.some(unit => unit.currentSquare === square)
-                );
-            }
-        });
-    }
-
-    getActionSquares(gridSize) {
-        const movableSquares = new Set();
-        const attackRangeSquares = new Set();
-        const currentRow = Math.floor(this.currentSquare / gridSize);
-        const currentCol = this.currentSquare % gridSize;
-
-        this.getSquaresInRange(currentRow, currentCol, this.movementSquares, gridSize, movableSquares);
-        this.attacks.forEach(attack => {
-            this.getSquaresInRange(currentRow, currentCol, attack.range, gridSize, attackRangeSquares);
-        });
-
-        return { 
-            movableSquares: Array.from(movableSquares), 
-            attackRangeSquares: Array.from(attackRangeSquares)
-        };
-    }
-
-    getSquaresInRange(currentRow, currentCol, range, gridSize, squaresSet) {
-        for (let rowOffset = -range; rowOffset <= range; rowOffset++) {
-            for (let colOffset = -range; colOffset <= range; colOffset++) {
-                const newRow = currentRow + rowOffset;
-                const newCol = currentCol + colOffset;
-                
-                if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-                    const distance = Math.max(Math.abs(rowOffset), Math.abs(colOffset));
-                    if (distance <= range && distance > 0) {
-                        squaresSet.add(newRow * gridSize + newCol);
-                    }
-                }
-            }
-        }
-    }
-
-    executeAttack(stateObj, attackIndex, targetIndex) {
-        const attack = this.attacks[attackIndex];
-        if (!attack) return stateObj;
-
-        attack.effects.forEach(effect => { 
-        })
-
-        stateObj = immer.produce(stateObj, draft => {
-            attack.effects.forEach(effect => {
-                this.applyEffect(draft, effect, targetIndex);
-            });
-            this.unitAttackedThisTurn = true;
-        });
-
-        return stateObj
-    }
-
-    applyEffect(draft, effect, targetIndex) {
-        switch (effect.type) {
-            case 'damage':
-                this.applyDamage(draft, targetIndex, effect.amount, effect.accuracyModifier);
-                break;
-            case 'stun':
-                this.applyStun(draft, targetIndex, effect.duration);
-                break;
-            case 'areaEffect':
-                this.applyAreaEffect(draft, targetIndex, effect.radius, effect.effect);
-                break;
-            // Add more effect types as needed
-        }
-    }
-
-    applyDamage(draft, targetIndex, amount, accuracyModifier) {
-        const targetUnit = draft.opponentArmy[targetIndex]
-        if (targetUnit) {
-            const distance = chebyshevDistance(this.currentSquare, targetUnit.currentSquare);
-            const hitRoll = Math.random();
-            const threshold = (distance - 1) * accuracyModifier;
-            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100)
-            if (hitRoll > threshold) {
-                targetUnit.health -= amount;
-            }
-        }
-    }
-
-    applyStun(draft, targetIndex, duration) {
-        const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-        if (targetUnit) {
-            targetUnit.stunned = duration;
-        }
-    }
-
-    applyAreaEffect(draft, centerIndex, radius, effect) {
-        const affectedSquares = getSquaresInRadius(centerIndex, radius, draft.gridSize);
-        affectedSquares.forEach(square => {
-            this.applyEffect(draft, effect, square);
-        });
     }
 }
 
@@ -157,15 +45,15 @@ class closeUpWarrior extends BasicWarrior {
 
         this.attacks = [
             {
-                name: "Rifle Shot - 2",
+                name: "Pistol Shot - 1",
                 range: 4,
                 effects: [
-                    { type: 'damage', amount: 2, accuracyModifier: 0.15 }
+                    { type: 'damage', amount: 1, accuracyModifier: 0.1 }
                 ]
             },
             {
                 name: "Shotgun Blast - 4",
-                range: 2,
+                range: 3,
                 effects: [
                     { type: 'damage', amount: 4, accuracyModifier: 0.25 }
                 ]
@@ -188,15 +76,15 @@ class minigunWarrior extends BasicWarrior {
 
         this.attacks = [
             {
-                name: "Rifle Shot - 2",
-                range: 4,
+                name: "Aim Beacon",
+                range: 5,
                 effects: [
-                    { type: 'damage', amount: 2, accuracyModifier: 0.1 }
+                    { type: 'applyMark', amount: 1 }
                 ]
             },
             {
                 name: "Minigun - 3",
-                range: 3,
+                range: 4,
                 effects: [
                     { type: 'damage', amount: 3, accuracyModifier: 0.15 }
                 ]
@@ -228,7 +116,7 @@ class speederBike extends BasicWarrior {
                 name: "Splatter - 6",
                 range: 1,
                 effects: [
-                    { type: 'damage', amount: 6, accuracyModifier: 0.15 }
+                    { type: 'damage', amount: 6, accuracyModifier: 0.35 }
                 ]
             },
         ];
