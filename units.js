@@ -1,151 +1,146 @@
 
 class BasicWarrior {
-    constructor(isPlayerOwned = true, id = 0, color = "white", unitCurrentSquare=0) {
-        this.type = 'warrior';
+    constructor(isPlayerOwned = true, id = 0, color = "white", unitCurrentSquare = 0) {
         this.health = 5;
         this.points = 2;
-        this.movementSquares = 2; 
+        this.movementSquares = 2;
         this.playerOwned = isPlayerOwned;
         this.color = color;
         this.unitMovedThisTurn = false;
         this.unitAttackedThisTurn = false;
         this.moveTowardsClosestEnemy = false;
         this.currentSquare = unitCurrentSquare;
-        this.id = id
-        this.img = 'img/rifleman.png',
-
-        this.attack1 = {
-            range: 4,
-            attack: 2,
-            name: "Rifle Shot - 2",
-            distanceAccuracyModifier: 0.15,  
-            execute: (stateObj, targetIndex, distance) => {
-                return immer.produce(stateObj, draft => {
-                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-                    if (targetUnit) {
-                        const hitRoll = Math.random()
-                        const threshold = (distance-1) * this.attack1.distanceAccuracyModifier
-                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-                        if (hitRoll > (threshold)) {
-                            targetUnit.health -= this.attack1.attack;
-                        }
-                        this.unitAttackedThisTurn = true;
-                        
-                    }
-                });
-            }
-        };
-
-        this.attack2 = {
-            range: 5, 
-            attack: 1,
-            name: "Distant Shot - 1", 
-            distanceAccuracyModifier: 0.05,
-            execute: (stateObj, targetIndex, distance) => {
-                stateObj = immer.produce(stateObj, draft => {
-                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-                    if (targetUnit) {
-                        const hitRoll = Math.random()
-                        const threshold = (distance-1) * this.attack2.distanceAccuracyModifier
-                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-                        if (hitRoll > (threshold)) {
-                            targetUnit.health -= this.attack2.attack;
-                        }
-                        this.unitAttackedThisTurn = true;
-                        
-                    }
-                });
-                return stateObj
-            }
-        };
+        this.id = id;
+        this.img = 'img/rifleman.png';
+        this.attacks = [
+            {
+                name: "Rifle Shot - 2",
+                range: 4,
+                effects: [
+                    { type: 'damage', amount: 2, accuracyModifier: 0.15 }
+                ]
+            },
+            {
+                name: "Aimed Shot - 1",
+                range: 4,
+                effects: [
+                    { type: 'damage', amount: 1, accuracyModifier: 0.1 }
+                ]
+            },
+        ];
     }
 
     whenClicked(stateObj) {
         if (!this.playerOwned || (this.unitMovedThisTurn && this.unitAttackedThisTurn)) return stateObj;
 
-        let newState = immer.produce(stateObj, draft => {
-            const { movableSquares, attackRangeSquares1, attackRangeSquares2  } = this.getMovableSquares(stateObj.gridSize);
+        return immer.produce(stateObj, draft => {
+            const { movableSquares, attackRangeSquares } = this.getActionSquares(stateObj.gridSize);
 
             if (!this.unitMovedThisTurn) {
-                draft.movableSquares = movableSquares.filter(square => {
-                    return square >= 0 && square < draft.grid.length && draft.grid[square] === 0;
-                });
+                draft.movableSquares = movableSquares.filter(square => 
+                    square >= 0 && square < draft.grid.length && draft.grid[square] === 0
+                );
             }
 
             if (!this.unitAttackedThisTurn) {
-                draft.attackRangeSquares1 = attackRangeSquares1.filter(square => {
-                    return square >= 0 && square < draft.grid.length && draft.opponentArmy.some(unit => unit.currentSquare === square);
-                });
-                draft.attackRangeSquares2 = attackRangeSquares2.filter(square => {
-                    return square >= 0 && square < draft.grid.length && draft.opponentArmy.some(unit => unit.currentSquare === square);
-                });
+                draft.attackRangeSquares = attackRangeSquares.filter(square => 
+                    square >= 0 && square < draft.grid.length && 
+                    draft.opponentArmy.some(unit => unit.currentSquare === square)
+                );
             }
-
         });
-
-        if (this.unitMovedThisTurn && (newState.attackRangeSquares1.length === 0 && newState.attackRangeSquares2.length === 0)) {
-            return stateObj
-        } else {
-            return newState
-        }
     }
 
-    getMovableSquares(gridSize) {
+    getActionSquares(gridSize) {
         const movableSquares = new Set();
-        const attackRangeSquares1 = new Set();
-        const attackRangeSquares2 = new Set();
+        const attackRangeSquares = new Set();
         const currentRow = Math.floor(this.currentSquare / gridSize);
         const currentCol = this.currentSquare % gridSize;
 
-        // Check for movement range
-        for (let rowOffset = -this.movementSquares; rowOffset <= this.movementSquares; rowOffset++) {
-            for (let colOffset = -this.movementSquares; colOffset <= this.movementSquares; colOffset++) {
-                const newRow = currentRow + rowOffset;
-                const newCol = currentCol + colOffset;
-                
-                if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-                    const distance = Math.max(Math.abs(rowOffset), Math.abs(colOffset));
-                    if (distance <= this.movementSquares && distance > 0) {
-                        movableSquares.add(newRow * gridSize + newCol);
-                    }
-                }
-            }
-        }
-
-        // Check for attack range
-        for (let rowOffset = -this.attack1.range; rowOffset <= this.attack1.range; rowOffset++) {
-            for (let colOffset = -this.attack1.range; colOffset <= this.attack1.range; colOffset++) {
-                const newRow = currentRow + rowOffset;
-                const newCol = currentCol + colOffset;
-                
-                if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-                    const distance = Math.max(Math.abs(rowOffset), Math.abs(colOffset));
-                    if (distance <= this.attack1.range && distance > 0) {
-                        attackRangeSquares1.add(newRow * gridSize + newCol);
-                    }
-                }
-            }
-        }
-
-        for (let rowOffset = -this.attack2.range; rowOffset <= this.attack2.range; rowOffset++) {
-            for (let colOffset = -this.attack2.range; colOffset <= this.attack2.range; colOffset++) {
-                const newRow = currentRow + rowOffset;
-                const newCol = currentCol + colOffset;
-                
-                if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-                    const distance = Math.max(Math.abs(rowOffset), Math.abs(colOffset));
-                    if (distance <= this.attack2.range && distance > 0) {
-                        attackRangeSquares2.add(newRow * gridSize + newCol);
-                    }
-                }
-            }
-        }
+        this.getSquaresInRange(currentRow, currentCol, this.movementSquares, gridSize, movableSquares);
+        this.attacks.forEach(attack => {
+            this.getSquaresInRange(currentRow, currentCol, attack.range, gridSize, attackRangeSquares);
+        });
 
         return { 
             movableSquares: Array.from(movableSquares), 
-            attackRangeSquares1: Array.from(attackRangeSquares1),
-            attackRangeSquares2: Array.from(attackRangeSquares2) 
+            attackRangeSquares: Array.from(attackRangeSquares)
         };
+    }
+
+    getSquaresInRange(currentRow, currentCol, range, gridSize, squaresSet) {
+        for (let rowOffset = -range; rowOffset <= range; rowOffset++) {
+            for (let colOffset = -range; colOffset <= range; colOffset++) {
+                const newRow = currentRow + rowOffset;
+                const newCol = currentCol + colOffset;
+                
+                if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+                    const distance = Math.max(Math.abs(rowOffset), Math.abs(colOffset));
+                    if (distance <= range && distance > 0) {
+                        squaresSet.add(newRow * gridSize + newCol);
+                    }
+                }
+            }
+        }
+    }
+
+    executeAttack(stateObj, attackIndex, targetIndex) {
+        const attack = this.attacks[attackIndex];
+        if (!attack) return stateObj;
+
+        attack.effects.forEach(effect => { 
+        })
+
+        stateObj = immer.produce(stateObj, draft => {
+            attack.effects.forEach(effect => {
+                this.applyEffect(draft, effect, targetIndex);
+            });
+            this.unitAttackedThisTurn = true;
+        });
+
+        return stateObj
+    }
+
+    applyEffect(draft, effect, targetIndex) {
+        switch (effect.type) {
+            case 'damage':
+                this.applyDamage(draft, targetIndex, effect.amount, effect.accuracyModifier);
+                break;
+            case 'stun':
+                this.applyStun(draft, targetIndex, effect.duration);
+                break;
+            case 'areaEffect':
+                this.applyAreaEffect(draft, targetIndex, effect.radius, effect.effect);
+                break;
+            // Add more effect types as needed
+        }
+    }
+
+    applyDamage(draft, targetIndex, amount, accuracyModifier) {
+        const targetUnit = draft.opponentArmy[targetIndex]
+        if (targetUnit) {
+            const distance = chebyshevDistance(this.currentSquare, targetUnit.currentSquare);
+            const hitRoll = Math.random();
+            const threshold = (distance - 1) * accuracyModifier;
+            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100)
+            if (hitRoll > threshold) {
+                targetUnit.health -= amount;
+            }
+        }
+    }
+
+    applyStun(draft, targetIndex, duration) {
+        const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
+        if (targetUnit) {
+            targetUnit.stunned = duration;
+        }
+    }
+
+    applyAreaEffect(draft, centerIndex, radius, effect) {
+        const affectedSquares = getSquaresInRadius(centerIndex, radius, draft.gridSize);
+        affectedSquares.forEach(square => {
+            this.applyEffect(draft, effect, square);
+        });
     }
 }
 
@@ -158,51 +153,24 @@ class closeUpWarrior extends BasicWarrior {
         this.movementSquares = 2;
         this.points = 2;
         this.moveTowardsClosestEnemy = true;
-        this.img = 'img/shotgun.png',
+        this.img = 'img/shotgun.png';
 
-        this.attack1 = {
-            range: 4,
-            attack: 2,
-            name: "Rifle Shot - 2",
-            distanceAccuracyModifier: 0.15,
-            execute: (stateObj, targetIndex, distance) => {
-                return immer.produce(stateObj, draft => {
-                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-                    if (targetUnit) {
-                        const hitRoll = Math.random()
-                        const threshold = (distance-1) * this.attack1.distanceAccuracyModifier
-                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-                        if (hitRoll > (threshold)) {
-                            targetUnit.health -= this.attack1.attack;
-                        }
-                        this.unitAttackedThisTurn = true;
-                    }
-                });
-            }
-        };
-
-        this.attack2 = {
-            range: 2,
-            attack: 4,
-            distanceAccuracyModifier: 0.3,
-            name: "Shotgun Blast - 4",
-            execute: (stateObj, targetIndex, distance) => {
-                stateObj = immer.produce(stateObj, draft => {
-                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-                    if (targetUnit) {
-                        const hitRoll = Math.random()
-                        const threshold = (distance-1) * this.attack2.distanceAccuracyModifier
-                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-                        if (hitRoll > (threshold)) {
-                            targetUnit.health -= this.attack2.attack;
-                        }
-                        this.unitAttackedThisTurn = true;
-                        
-                    }
-                });
-                return stateObj;
-            }
-        };
+        this.attacks = [
+            {
+                name: "Rifle Shot - 2",
+                range: 4,
+                effects: [
+                    { type: 'damage', amount: 2, accuracyModifier: 0.15 }
+                ]
+            },
+            {
+                name: "Shotgun Blast - 4",
+                range: 2,
+                effects: [
+                    { type: 'damage', amount: 4, accuracyModifier: 0.25 }
+                ]
+            },
+        ];
     }
 }
 
@@ -218,49 +186,22 @@ class minigunWarrior extends BasicWarrior {
         this.moveTowardsClosestEnemy = true;
         this.img = 'img/minigun.png',
 
-        this.attack1 = {
-            range: 4,
-            attack: 2,
-            name: "Rifle Shot - 2",
-            distanceAccuracyModifier: 0.15,
-            execute: (stateObj, targetIndex, distance) => {
-                return immer.produce(stateObj, draft => {
-                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-                    if (targetUnit) {
-                        const hitRoll = Math.random()
-                        const threshold = (distance-1) * this.attack1.distanceAccuracyModifier
-                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-                        if (hitRoll > (threshold)) {
-                            targetUnit.health -= this.attack1.attack;
-                        }
-                        this.unitAttackedThisTurn = true;
-                    }
-                });
-            }
-        };
-
-        this.attack2 = {
-            range: 3,
-            attack: 3,
-            distanceAccuracyModifier: 0.2,
-            name: "Minigun - 3",
-            execute: (stateObj, targetIndex, distance) => {
-                stateObj = immer.produce(stateObj, draft => {
-                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-                    if (targetUnit) {
-                        const hitRoll = Math.random()
-                        const threshold = (distance-1) * this.attack2.distanceAccuracyModifier
-                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-                        if (hitRoll > (threshold)) {
-                            targetUnit.health -= this.attack2.attack;
-                        }
-                        this.unitAttackedThisTurn = true;
-                        
-                    }
-                });
-                return stateObj;
-            }
-        };
+        this.attacks = [
+            {
+                name: "Rifle Shot - 2",
+                range: 4,
+                effects: [
+                    { type: 'damage', amount: 2, accuracyModifier: 0.1 }
+                ]
+            },
+            {
+                name: "Minigun - 3",
+                range: 3,
+                effects: [
+                    { type: 'damage', amount: 3, accuracyModifier: 0.15 }
+                ]
+            },
+        ];
     }
 }
 
@@ -275,49 +216,22 @@ class speederBike extends BasicWarrior {
         this.moveTowardsClosestEnemy = true;
         this.img = 'img/bike.png',
 
-        this.attack1 = {
-            range: 1,
-            attack: 6,
-            name: "Splatter - 6",
-            distanceAccuracyModifier: 0.3,
-            execute: (stateObj, targetIndex, distance) => {
-                return immer.produce(stateObj, draft => {
-                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-                    if (targetUnit) {
-                        const hitRoll = Math.random()
-                        const threshold = (distance-1) * this.attack1.distanceAccuracyModifier
-                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-                        if (hitRoll > (threshold)) {
-                            targetUnit.health -= this.attack1.attack;
-                        }
-                        this.unitAttackedThisTurn = true;
-                    }
-                });
-            }
-        };
-
-        this.attack2 = {
-            range: 4,
-            attack: 4,
-            distanceAccuracyModifier: 0.2,
-            name: "Front Guns - 4",
-            execute: (stateObj, targetIndex, distance) => {
-                stateObj = immer.produce(stateObj, draft => {
-                    const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === targetIndex);
-                    if (targetUnit) {
-                        const hitRoll = Math.random()
-                        const threshold = (distance-1) * this.attack2.distanceAccuracyModifier
-                        console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-                        if (hitRoll > (threshold)) {
-                            targetUnit.health -= this.attack2.attack;
-                        }
-                        this.unitAttackedThisTurn = true;
-                        
-                    }
-                });
-                return stateObj;
-            }
-        };
+        this.attacks = [
+            {
+                name: "Front Guns - 4",
+                range: 4,
+                effects: [
+                    { type: 'damage', amount: 4, accuracyModifier: 0.2 }
+                ]
+            },
+            {
+                name: "Splatter - 6",
+                range: 1,
+                effects: [
+                    { type: 'damage', amount: 6, accuracyModifier: 0.15 }
+                ]
+            },
+        ];
     }
 }
 
@@ -336,8 +250,8 @@ const playerLocations = getRandomNumbersInRange(0, 16, 4)
 const opponentLocations = getRandomNumbersInRange(47, 63, 4)
 console.log("player locatios " + playerLocations + " and opponents " + opponentLocations)
 
-const playerWarrior1 = new BasicWarrior(true, 0, "green", playerLocations[0]);
-const playerWarrior2 = new closeUpWarrior(true, 1, "green", playerLocations[1]);
+const playerWarrior1 = new BasicWarrior(true, 0, "blue", playerLocations[0]);
+const playerWarrior2 = new closeUpWarrior(true, 1, "blue", playerLocations[1]);
 const playerWarrior3 = new minigunWarrior(true, 2, "green", playerLocations[2]);
 const playerWarrior4 = new speederBike(true, 3, "gold", playerLocations[3]);
 

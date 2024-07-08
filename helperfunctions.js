@@ -34,7 +34,7 @@ function createHealthText(cell) {
 function createAttackButton(stateObj, attack) {
     const attackButton = document.createElement('button');
     const distance = findTargetDistance(stateObj)
-    const accuracy = 100-Math.round(((distance-1) * attack.distanceAccuracyModifier ) * 100)
+    const accuracy = 100-Math.round(((distance-1) * attack.effects[0].accuracyModifier ) * 100)
     attackButton.innerText = attack.name + " (" + accuracy + "%)";
     return attackButton
 }
@@ -45,13 +45,80 @@ function chebyshevDistance(square1, square2) {
     return Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2));
 }
 
-function executeAttack(draft, enemy, target, attack) {
-    const hitRoll = Math.random()
-    const distance = chebyshevDistance(enemy.currentSquare, target.currentSquare)
-    const threshold = (distance-1) * attack.distanceAccuracyModifier
-    console.log("hit roll was " + hitRoll + "and threshold is " + threshold)
-    if (hitRoll > (threshold)) {
-        target.health -= attack.attack;
+function executeEnemyAttack(draft, attacker, target, attack) {
+    const targetIndex = draft.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
+    if (targetIndex === -1) return;
+
+    attack.effects.forEach(effect => {
+        switch (effect.type) {
+            case 'damage':
+                console.log(attack.name)
+                applyDamage(draft, attacker, targetIndex, effect.amount, effect.accuracyModifier);
+                break;
+            case 'stun':
+                applyStun(draft, targetIndex, effect.duration);
+                break;
+            case 'areaEffect':
+                applyAreaEffect(draft, targetIndex, effect.radius, effect.effect);
+                break;
+            // Add more effect types as needed
+        }
+    });
+
+    attacker.unitAttackedThisTurn = true;
+}
+
+function applyDamage(draft, attacker, targetIndex, amount, accuracyModifier) {
+    const targetUnit = draft.playerArmy[targetIndex];
+    if (targetUnit) {
+        const distance = chebyshevDistance(attacker.currentSquare, targetUnit.currentSquare);
+        const hitRoll = Math.random();
+        const threshold = (distance - 1) * accuracyModifier;
+        console.log(`Hit roll: ${Math.round(hitRoll * 100) / 100}, Threshold: ${Math.round(threshold * 100) / 100}`);
+        if (hitRoll > threshold) {
+            targetUnit.health -= amount;
+        }
     }
-    enemy.unitAttackedThisTurn = true;
+}
+
+function applyStun(draft, targetIndex, duration) {
+    const targetUnit = draft.playerArmy.find(unit => unit.currentSquare === draft.playerArmy[targetIndex].currentSquare);
+    if (targetUnit) {
+        targetUnit.stunned = duration;
+    }
+}
+
+function applyAreaEffect(draft, centerIndex, radius, effect) {
+    const affectedSquares = getSquaresInRadius(centerIndex, radius, draft.gridSize);
+    affectedSquares.forEach(square => {
+        const targetIndex = draft.playerArmy.findIndex(unit => unit.currentSquare === square);
+        if (targetIndex !== -1) {
+            switch (effect.type) {
+                case 'damage':
+                    applyDamage(draft, effect, targetIndex, effect.amount, effect.accuracyModifier);
+                    break;
+                case 'stun':
+                    applyStun(draft, targetIndex, effect.duration);
+                    break;
+                // Add more effect types as needed
+            }
+        }
+    });
+}
+
+
+function setBackToNormal(draft) {
+    draft.showAttackPopup = false;
+    draft.attackPopupPosition = null;
+    draft.attackOptions = null;
+    draft.targetEnemyIndex = null;
+    draft.selectedUnitIndex = null;
+    draft.currentScreen = "normalScreen";
+}
+
+function resetUnitTurnStatus(units) {
+    units.forEach(unit => {
+        unit.unitMovedThisTurn = false;
+        unit.unitAttackedThisTurn = false;
+    });
 }
