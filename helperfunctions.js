@@ -8,11 +8,22 @@ function findTargetDistance(stateObj) {
 function createEndTurnButton(stateObj) {
     const endTurnButton = document.createElement('button');
     endTurnButton.textContent = 'End Turn';
+    endTurnButton.className = "bottom-button"
     endTurnButton.addEventListener('click', () => {
         stateObj = handleEndTurn(stateObj);
         updateState(stateObj);
     });
 
+    return endTurnButton
+}
+
+function createRestartButton() {
+    const endTurnButton = document.createElement('button');
+    endTurnButton.className = "bottom-button"
+    endTurnButton.textContent = 'You won! Click to restart';
+    endTurnButton.addEventListener('click', () => {
+        location.reload()
+    });
     return endTurnButton
 }
 

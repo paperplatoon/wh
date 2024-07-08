@@ -6,6 +6,17 @@
     width: 96vw;
     height: 96vh; 
     z-index: -1;
+    justify-content: start;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.bottom-button {
+    width: 30vw;
+    height: 4vh;
+    margin-top: 3vh;
+    align-self: center;
 }
 
 .grid-container {

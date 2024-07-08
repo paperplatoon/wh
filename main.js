@@ -65,6 +65,7 @@ function renderGrid(stateObj) {
         existingPopup.remove();
     }
 
+
     const gridContainer = document.createElement('div');
     gridContainer.className = 'grid-container';
 
@@ -73,7 +74,12 @@ function renderGrid(stateObj) {
     });
 
     appDiv.appendChild(gridContainer);
-    appDiv.appendChild(createEndTurnButton(stateObj));
+    if (stateObj.opponentArmy.length === 0) {
+        appDiv.appendChild(createRestartButton(stateObj));
+    } else {
+        appDiv.appendChild(createEndTurnButton(stateObj));
+    }
+    
 }
 
 function renderGlowingSquares(stateObj) {
