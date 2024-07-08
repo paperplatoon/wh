@@ -17,16 +17,30 @@ class BasicWarrior {
             {
                 name: "Rifle Shot - 2",
                 range: 4,
-                effects: [
-                    { type: 'damage', amount: 2, accuracyModifier: 0.15 }
-                ]
+                accuracyModifier: 0.15,
+                damage: 2,
+                execute: (stateObj, targetIndex, attack) => {
+                    if (this.playerOwned) {
+                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
+                    } else {
+                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
+                    }
+                    
+                }
             },
             {
                 name: "Aimed Shot - 1",
                 range: 6,
-                effects: [
-                    { type: 'damage', amount: 1, accuracyModifier: 0.1 }
-                ]
+                accuracyModifier: 0.1,
+                damage: 1,
+                execute: (stateObj, targetIndex, attack) => {
+                    if (this.playerOwned) {
+                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
+                    } else {
+                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
+                    }
+                    
+                }
             },
         ];
     }
@@ -46,17 +60,31 @@ class closeUpWarrior extends BasicWarrior {
         this.attacks = [
             {
                 name: "Pistol Shot - 1",
-                range: 4,
-                effects: [
-                    { type: 'damage', amount: 1, accuracyModifier: 0.1 }
-                ]
+                range: 5,
+                accuracyModifier: 0.1,
+                damage: 1,
+                execute: (stateObj, targetIndex, attack) => {
+                    if (this.playerOwned) {
+                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
+                    } else {
+                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
+                    }
+                    
+                }
             },
             {
                 name: "Shotgun Blast - 4",
                 range: 3,
-                effects: [
-                    { type: 'damage', amount: 4, accuracyModifier: 0.25 }
-                ]
+                accuracyModifier: 0.25,
+                damage: 4,
+                execute: (stateObj, targetIndex, attack) => {
+                    if (this.playerOwned) {
+                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
+                    } else {
+                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
+                    }
+                    
+                }
             },
         ];
     }
@@ -77,17 +105,31 @@ class minigunWarrior extends BasicWarrior {
         this.attacks = [
             {
                 name: "Aim Beacon",
-                range: 5,
-                effects: [
-                    { type: 'applyMark', amount: 1 }
-                ]
+                range: 6,
+                damage: 0,
+                mark: 1,
+                execute: (stateObj, targetIndex, attack) => {
+                    if (this.playerOwned) {
+                        return applyMark(stateObj, targetIndex, attack.mark, true);
+                    } else {
+                        return applyMark(stateObj, targetIndex, attack.mark, false);
+                    }
+                    
+                }
             },
             {
                 name: "Minigun - 3",
                 range: 4,
-                effects: [
-                    { type: 'damage', amount: 3, accuracyModifier: 0.15 }
-                ]
+                accuracyModifier: 0.15,
+                damage: 3,
+                execute: (stateObj, targetIndex, attack) => {
+                    if (this.playerOwned) {
+                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
+                    } else {
+                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
+                    }
+                    
+                }
             },
         ];
     }
@@ -108,16 +150,30 @@ class speederBike extends BasicWarrior {
             {
                 name: "Front Guns - 4",
                 range: 4,
-                effects: [
-                    { type: 'damage', amount: 4, accuracyModifier: 0.2 }
-                ]
+                accuracyModifier: 0.2,
+                damage: 4,
+                execute: (stateObj, targetIndex, attack) => {
+                    if (this.playerOwned) {
+                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
+                    } else {
+                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
+                    }
+                    
+                }
             },
             {
                 name: "Splatter - 6",
                 range: 1,
-                effects: [
-                    { type: 'damage', amount: 6, accuracyModifier: 0.35 }
-                ]
+                accuracyModifier: 0.15,
+                damage: 6,
+                execute: (stateObj, targetIndex, attack) => {
+                    if (this.playerOwned) {
+                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
+                    } else {
+                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
+                    }
+                    
+                }
             },
         ];
     }

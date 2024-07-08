@@ -46,7 +46,7 @@ function createAttackButton(stateObj, attack) {
     const attackButton = document.createElement('button');
     const distance = findTargetDistance(stateObj)
     const markPenalty = stateObj.opponentArmy[stateObj.targetEnemyIndex].mark * 0.1
-    const distanceModifier = (distance-1) * attack.effects[0].accuracyModifier
+    const distanceModifier = (distance-1) * attack.accuracyModifier
     const threshold = Math.round((distanceModifier - markPenalty) * 100)
     const accuracy = ((100-threshold)>100) ? 100 : (100-threshold)
     const textString = (accuracy) ?  attack.name + " (" + accuracy + "%)" : attack.name
@@ -54,42 +54,53 @@ function createAttackButton(stateObj, attack) {
     return attackButton
 }
 
-function executeEnemyAttack(draft, attacker, target, attack) {
-    const targetIndex = draft.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
-    if (targetIndex === -1) return;
+function executeEnemyAttack(stateObj, attacker, target, attack) {
+    const targetIndex = stateObj.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
+    stateObj = attack.execute(stateObj, targetIndex, attack);
+    return immer.produce(stateObj, draft => {
+        
+        if (targetIndex === -1) return;
 
-    attack.effects.forEach(effect => {
-        switch (effect.type) {
-            case 'damage':
-                console.log(attack.name)
-                applyPlayerDamage(draft, attacker, targetIndex, effect.amount, effect.accuracyModifier);
-                break;
-            case 'stun':
-                applyStun(draft, targetIndex, effect.duration);
-                break;
-            case 'areaEffect':
-                applyAreaEffect(draft, targetIndex, effect.radius, effect.effect);
-                break;
-            // Add more effect types as needed
+        // Mark the attacker as having attacked this turn
+        const attackerIndex = draft.opponentArmy.findIndex(unit => unit.id === attacker.id);
+        if (attackerIndex !== -1) {
+            draft.opponentArmy[attackerIndex].unitAttackedThisTurn = true;
         }
     });
-
-    attacker.unitAttackedThisTurn = true;
 }
 
-function applyPlayerDamage(draft, attacker, targetIndex, amount, accuracyModifier) {
-    const targetUnit = draft.playerArmy[targetIndex];
-    const selectedUnit = draft.playerArmy[draft.selectedUnitIndex];
-    if (targetUnit) {
-        const distance = chebyshevDistance(attacker.currentSquare, targetUnit.currentSquare);
-        const hitRoll = Math.random();
-        const markPenalty = targetUnit.mark * 0.1; // Calculate mark penalty
-        const threshold = (distance - 1) * accuracyModifier - markPenalty; 
-        console.log(`Hit roll: ${Math.round(hitRoll * 100) / 100}, Threshold: ${Math.round(threshold * 100) / 100}`);
-        if (hitRoll > threshold) {
-            targetUnit.health -= amount;
+function applyDamage(stateObj, targetIndex, amount, accuracyModifier) {
+    return immer.produce(stateObj, draft => {
+        const targetUnit = draft.opponentArmy[targetIndex];
+        if (targetUnit) {
+            const distance = chebyshevDistance(stateObj.playerArmy[stateObj.selectedUnitIndex].currentSquare, targetUnit.currentSquare);
+            const hitRoll = Math.random();
+            const markPenalty = targetUnit.mark * 0.1; // Calculate mark penalty
+            const distMod = ((distance - 1) * accuracyModifier)
+            const threshold =  distMod - markPenalty; 
+            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
+            if (hitRoll > threshold) {
+                targetUnit.health -= amount;
+            }
         }
-    }
+    });
+}
+
+function applyPlayerDamage(stateObj, targetIndex, attackerCurrentSquare, amount, accuracyModifier) {
+    return immer.produce(stateObj, draft => {
+        const targetUnit = draft.playerArmy[targetIndex];
+        if (targetUnit) {
+            const distance = chebyshevDistance(attackerCurrentSquare, targetUnit.currentSquare);
+            const hitRoll = Math.random();
+            const markPenalty = targetUnit.mark * 0.1; // Calculate mark penalty
+            const distMod = ((distance - 1) * accuracyModifier)
+            const threshold =  distMod - markPenalty; 
+            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
+            if (hitRoll > threshold) {
+                targetUnit.health -= amount;
+            }
+        }
+    });
 }
 
 function applyStun(draft, targetIndex, duration) {
@@ -154,9 +165,7 @@ function executeAttack(stateObj, unit, attackIndex, targetIndex) {
     const attack = unit.attacks[attackIndex];
     if (!attack) return stateObj;
 
-    attack.effects.forEach(effect => { 
-        stateObj = applyEffect(stateObj, effect, targetIndex);
-    });
+    stateObj = attack.execute(stateObj, targetIndex, attack);
 
     return immer.produce(stateObj, draft => {
         const unitIndex = draft.playerArmy.findIndex(u => u.id === unit.id);
@@ -166,21 +175,6 @@ function executeAttack(stateObj, unit, attackIndex, targetIndex) {
     });
 }
 
-function applyEffect(stateObj, effect, targetIndex) {
-    switch (effect.type) {
-        case 'damage':
-            return applyDamage(stateObj, targetIndex, effect.amount, effect.accuracyModifier);
-        case 'stun':
-            return applyStun(stateObj, targetIndex, effect.duration);
-        case 'areaEffect':
-            return applyAreaEffect(stateObj, targetIndex, effect.radius, effect.effect);
-        case 'applyMark':
-            return applyMark(stateObj, targetIndex, effect.amount);
-        // Add more effect types as needed
-        default:
-            return stateObj;
-    }
-}
 
 function applyDamage(stateObj, targetIndex, amount, accuracyModifier) {
     return immer.produce(stateObj, draft => {
@@ -200,9 +194,9 @@ function applyDamage(stateObj, targetIndex, amount, accuracyModifier) {
     });
 }
 
-function applyMark(stateObj, targetIndex, amount) {
+function applyMark(stateObj, targetIndex, amount, isPlayer) {
     return immer.produce(stateObj, draft => {
-        const targetUnit = draft.opponentArmy[targetIndex];
+        const targetUnit = (isPlayer) ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex]
         if (targetUnit) {
             targetUnit.mark += amount;
         }
@@ -278,12 +272,6 @@ function getSquaresInRange(currentRow, currentCol, range, gridSize, squaresSet) 
         }
     }
 }
-
-
-
-
-
-
 
 
 function chebyshevDistance(square1, square2) {
