@@ -65,6 +65,16 @@
     z-index: 2;
 }
 
+.stunned-indicator-buff {
+    background-color: rgb(42, 218, 29);
+    color: rgb(19, 17, 1);
+    border: 1px solid black;
+    padding: 0;
+    bottom: -0.2vmin;
+    left: -0.2vmin;
+    z-index: 100;
+}
+
 .marked-indicator {
     background-color: rgb(218, 29, 29);
     color: rgb(255, 255, 255);
@@ -117,6 +127,10 @@
 
 .glow-orange {
     animation: glowOrange 1s infinite;
+}
+
+.glow-green {
+    box-shadow: 0 0 20px 3px green;
 }
 
 @keyframes glowRed {

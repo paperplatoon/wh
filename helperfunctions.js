@@ -5,54 +5,15 @@ function findTargetDistance(stateObj) {
     return distance
 }
 
-function createEndTurnButton(stateObj) {
-    const endTurnButton = document.createElement('button');
-    endTurnButton.textContent = 'End Turn';
-    endTurnButton.className = "bottom-button"
-    endTurnButton.addEventListener('click', () => {
-        stateObj = handleEndTurn(stateObj);
-        updateState(stateObj);
-    });
 
-    return endTurnButton
+
+function canBuffUnit(stateObj, index) {
+    return stateObj.buffableSquares.includes(index);
 }
 
-function createRestartButton() {
-    const endTurnButton = document.createElement('button');
-    endTurnButton.className = "bottom-button"
-    endTurnButton.textContent = 'You won! Click to restart';
-    endTurnButton.addEventListener('click', () => {
-        location.reload()
-    });
-    return endTurnButton
-}
 
-function createImageAvatar(cell) {
-    const img = document.createElement('img');
-    img.src = cell.img;
-    img.alt = '';
-    img.className = 'centered-img';
-    return img
-}
 
-function createHealthText(cell) {
-    const healthDiv = document.createElement('div');
-    healthDiv.className = 'health-text';
-    healthDiv.textContent = cell.health;
-    return healthDiv
-}
 
-function createAttackButton(stateObj, attack) {
-    const attackButton = document.createElement('button');
-    const distance = findTargetDistance(stateObj)
-    const markPenalty = stateObj.opponentArmy[stateObj.targetEnemyIndex].mark * 0.1
-    const distanceModifier = (distance-1) * attack.accuracyModifier
-    const threshold = Math.round((distanceModifier - markPenalty) * 100)
-    const accuracy = ((100-threshold)>100) ? 100 : (100-threshold)
-    const textString = (accuracy) ?  attack.name + " (" + accuracy + "%)" : attack.name
-    attackButton.innerText = textString
-    return attackButton
-}
 
 function executeEnemyAttack(stateObj, attacker, target, attack) {
     const targetIndex = stateObj.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
@@ -111,45 +72,6 @@ function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
     });
 }
 
-async function applyStun(stateObj, targetIndex, amount, isPlayer) {
-    return immer.produce(stateObj, draft => {
-        const targetUnit = isPlayer ? draft.playerArmy[targetIndex] : draft.opponentArmy[targetIndex];
-        if (targetUnit) {
-            targetUnit.stunned += amount;
-        }
-    });
-}
-
-function createGridCell(cell, index, stateObj) {
-    const cellDiv = document.createElement('div');
-    cellDiv.className = 'grid-cell';
-    if (cell !== 0) {
-        const avatar = createImageAvatar(cell);
-        const healthDiv = createHealthText(cell);
-        cellDiv.appendChild(avatar);
-        cellDiv.appendChild(healthDiv);
-        cellDiv.style.backgroundColor = cell.color;
-        cellDiv.addEventListener('click', () => handleCellClick(stateObj, index));
-
-        if (cell.stunned > 0) {
-            const stunnedIndicator = createStatusIndicator('stunned', cell.stunned);
-            cellDiv.appendChild(stunnedIndicator);
-        }
-        if (cell.mark > 0) {
-            const markedIndicator = createStatusIndicator('marked', cell.mark);
-            cellDiv.appendChild(markedIndicator);
-        }
-    }
-    return cellDiv;
-}
-
-function createStatusIndicator(status, value) {
-    const indicator = document.createElement('div');
-    indicator.className = `status-indicator ${status}-indicator`;
-    indicator.textContent = value;
-    return indicator;
-}
-
 
 function setBackToNormal(draft) {
     draft.showAttackPopup = false;
@@ -166,8 +88,6 @@ function resetUnitTurnStatus(units) {
         unit.unitAttackedThisTurn = false;
     });
 }
-
-
 
 async function executeAttack(stateObj, unit, attackIndex, targetIndex) {
     const attack = unit.attacks[attackIndex];
@@ -192,35 +112,33 @@ function applyMark(stateObj, targetIndex, amount, isPlayer) {
     });
 }
 
-function applyStun(stateObj, targetIndex, duration) {
+async function applyStun(stateObj, targetIndex, amount, isPlayer) {
     return immer.produce(stateObj, draft => {
-        const targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === draft.opponentArmy[targetIndex].currentSquare);
+        const targetUnit = !isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
         if (targetUnit) {
-            targetUnit.stunned = duration;
+            targetUnit.stunned += amount;
         }
     });
 }
 
-function whenUnitClicked(stateObj, unit) {
-    if (!unit.playerOwned || (unit.unitMovedThisTurn && unit.unitAttackedThisTurn)) return stateObj;
+function getBuffableSquares(unit, attack, draft) {
+    const buffableSquares = [];
+    const range = attack.range || 1; // Default to 1 if not specified
 
-    return immer.produce(stateObj, draft => {
-        const { movableSquares, attackRangeSquares } = getUnitActionSquares(unit, draft.gridSize);
-
-        if (!unit.unitMovedThisTurn) {
-            draft.movableSquares = movableSquares.filter(square => 
-                square >= 0 && square < draft.grid.length && draft.grid[square] === 0
-            );
+    for (let i = 0; i < draft.playerArmy.length; i++) {
+        const allyUnit = draft.playerArmy[i];
+        if (allyUnit.id !== unit.id) { // Don't include the unit itself
+            const distance = chebyshevDistance(unit.currentSquare, allyUnit.currentSquare);
+            if (distance <= range) {
+                buffableSquares.push(allyUnit.currentSquare);
+            }
         }
+    }
 
-        if (!unit.unitAttackedThisTurn) {
-            draft.attackRangeSquares = attackRangeSquares.filter(square => 
-                square >= 0 && square < draft.grid.length && 
-                draft.opponentArmy.some(unit => unit.currentSquare === square)
-            );
-        }
-    });
+    return buffableSquares;
 }
+
+
 
 function getUnitActionSquares(unit, gridSize) {
     const movableSquares = new Set();
@@ -255,7 +173,6 @@ function getSquaresInRange(currentRow, currentCol, range, gridSize, squaresSet) 
     }
 }
 
-
 function chebyshevDistance(square1, square2) {
     const x1 = square1 % state.gridSize, y1 = Math.floor(square1 / state.gridSize);
     const x2 = square2 % state.gridSize, y2 = Math.floor(square2 / state.gridSize);
@@ -276,5 +193,41 @@ function getSquaresInRadius(centerIndex, radius, gridSize) {
     }
 
     return squares;
+}
+
+function getPossibleMoves(draft, unit) {
+    const possibleMoves = [];
+    const currentX = unit.currentSquare % draft.gridSize;
+    const currentY = Math.floor(unit.currentSquare / draft.gridSize);
+
+    for (let dx = -unit.movementSquares; dx <= unit.movementSquares; dx++) {
+        for (let dy = -unit.movementSquares; dy <= unit.movementSquares; dy++) {
+            const newX = currentX + dx;
+            const newY = currentY + dy;
+            const newSquare = newY * draft.gridSize + newX;
+
+            if (newX >= 0 && newX < draft.gridSize && newY >= 0 && newY < draft.gridSize && 
+                draft.grid[newSquare] === 0) {
+                possibleMoves.push(newSquare);
+            }
+        }
+    }
+    return possibleMoves;
+}
+
+function getBestAttack(enemy, target) {
+    // Get all attacks that can kill the target
+    const killingAttacks = enemy.attacks.filter(attack => attack.damage >= target.health);
+
+    if (killingAttacks.length > 0) {
+        // If multiple attacks can kill, choose the one with the highest accuracy modifier
+        killingAttacks.sort((a, b) => a.accuracyModifier - b.accuracyModifier);
+        return killingAttacks[0];
+    }
+
+    // If no attack can kill, return the attack with the highest damage (can alter based on properties)
+    return enemy.attacks.reduce((best, current) => 
+        current.damage > best.damage ? current : best
+    , enemy.attacks[0]);
 }
 

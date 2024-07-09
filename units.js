@@ -211,6 +211,43 @@ class explosive extends BasicWarrior {
     }
 }
 
+//buffAttack.execute(stateObj, stateObj.targetAllyIndex, buffAttack);
+
+class buffer extends BasicWarrior {
+    constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
+        super(isPlayerOwned, id, color, unitCurrentSquare);
+        this.type = 'advancedWarrior';
+        this.health = 3;
+        this.color = color;
+        this.movementSquares = 3;
+        this.points = 2;
+        this.moveTowardsClosestEnemy = true;
+        this.img = 'img/goblin.png',
+
+        this.attacks = [
+            {
+                name: "Inspire",
+                range: 4,
+                stun: -2,
+                buff: true,
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyStun(stateObj, targetIndex, attack.stun, !this.isPlayerOwned)
+                    return stateObj
+                }
+            },
+            {
+                name: "Pistol Shot - 1",
+                range: 5,
+                accuracyModifier: 0.1,
+                damage: 1,
+                execute: (stateObj, targetIndex, attack) => {
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                }
+            },
+        ];
+    }
+}
+
 function getRandomNumbersInRange(x, y, arraySize) {
     const uniqueNumbers = new Set();
 
@@ -226,8 +263,8 @@ const playerLocations = getRandomNumbersInRange(0, 16, 4)
 const opponentLocations = getRandomNumbersInRange(47, 63, 4)
 console.log("player locatios " + playerLocations + " and opponents " + opponentLocations)
 
-const playerWarrior1 = new explosive(true, 0, "blue", playerLocations[0]);
-const playerWarrior2 = new closeUpWarrior(true, 1, "blue", playerLocations[1]);
+const playerWarrior1 = new stunner(true, 0, "blue", playerLocations[0]);
+const playerWarrior2 = new buffer(true, 1, "blue", playerLocations[1]);
 const playerWarrior3 = new minigunWarrior(true, 2, "green", playerLocations[2]);
 const playerWarrior4 = new speederBike(true, 3, "gold", playerLocations[3]);
 
