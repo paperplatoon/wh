@@ -69,61 +69,53 @@ function executeEnemyAttack(stateObj, attacker, target, attack) {
     });
 }
 
-function applyDamage(stateObj, targetIndex, amount, accuracyModifier) {
+function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlayer) {
     return immer.produce(stateObj, draft => {
-        const targetUnit = draft.opponentArmy[targetIndex];
+        const targetUnit = (isPlayer) ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
+        const attackerUnit = (isPlayer) ? stateObj.playerArmy[stateObj.selectedUnitIndex] : draft.opponentArmy.find(unit => unit.currentSquare === attackerSquare);
         if (targetUnit) {
-            const distance = chebyshevDistance(stateObj.playerArmy[stateObj.selectedUnitIndex].currentSquare, targetUnit.currentSquare);
+            const distance = chebyshevDistance(attackerSquare, targetUnit.currentSquare);
             const hitRoll = Math.random();
-            const markPenalty = targetUnit.mark * 0.1; // Calculate mark penalty
-            const distMod = ((distance - 1) * accuracyModifier)
-            const threshold =  distMod - markPenalty; 
+            const markBuff = targetUnit.mark * 0.1; // Calculate mark penalty
+            const stunnedPenalty = attackerUnit.stunned * 0.1;
+            const distanceModifier = ((distance - 1) * attack.accuracyModifier)
+            const threshold =  distanceModifier + stunnedPenalty - markBuff; 
             console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
             if (hitRoll > threshold) {
-                targetUnit.health -= amount;
+                targetUnit.health -= attack.damage;
             }
         }
     });
 }
 
-function applyPlayerDamage(stateObj, targetIndex, attackerCurrentSquare, amount, accuracyModifier) {
+
+function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
+    centerIndex = (isPlayer) ? stateObj.opponentArmy[targetIndex].currentSquare : stateObj.playerArmy[targetIndex].currentSquare
     return immer.produce(stateObj, draft => {
-        const targetUnit = draft.playerArmy[targetIndex];
-        if (targetUnit) {
-            const distance = chebyshevDistance(attackerCurrentSquare, targetUnit.currentSquare);
-            const hitRoll = Math.random();
-            const markPenalty = targetUnit.mark * 0.1; // Calculate mark penalty
-            const distMod = ((distance - 1) * accuracyModifier)
-            const threshold =  distMod - markPenalty; 
-            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
-            if (hitRoll > threshold) {
-                targetUnit.health -= amount;
+        const affectedSquares = getSquaresInRadius(centerIndex, attack.radius, draft.gridSize);
+        console.log(affectedSquares)
+        affectedSquares.forEach(square => {
+            const targetUnit = draft.grid[square];
+            if (targetUnit !== 0) {
+                let targetIndex = draft.playerArmy.findIndex(unit => unit.currentSquare === square);
+                let targetArmy = draft.playerArmy;
+                if (targetIndex === -1) {
+                    targetIndex = draft.opponentArmy.findIndex(unit => unit.currentSquare === square);
+                    targetArmy = draft.opponentArmy;
+                }
+                if (targetIndex !== -1) {
+                    targetArmy[targetIndex].health -= attack.damage;
+                }
             }
-        }
+        });
     });
 }
 
-function applyStun(draft, targetIndex, duration) {
-    const targetUnit = draft.playerArmy.find(unit => unit.currentSquare === draft.playerArmy[targetIndex].currentSquare);
-    if (targetUnit) {
-        targetUnit.stunned = duration;
-    }
-}
-
-function applyAreaEffect(draft, centerIndex, radius, effect) {
-    const affectedSquares = getSquaresInRadius(centerIndex, radius, draft.gridSize);
-    affectedSquares.forEach(square => {
-        const targetIndex = draft.playerArmy.findIndex(unit => unit.currentSquare === square);
-        if (targetIndex !== -1) {
-            switch (effect.type) {
-                case 'damage':
-                    applyDamage(draft, effect, targetIndex, effect.amount, effect.accuracyModifier);
-                    break;
-                case 'stun':
-                    applyStun(draft, targetIndex, effect.duration);
-                    break;
-                // Add more effect types as needed
-            }
+async function applyStun(stateObj, targetIndex, amount, isPlayer) {
+    return immer.produce(stateObj, draft => {
+        const targetUnit = isPlayer ? draft.playerArmy[targetIndex] : draft.opponentArmy[targetIndex];
+        if (targetUnit) {
+            targetUnit.stunned += amount;
         }
     });
 }
@@ -138,8 +130,24 @@ function createGridCell(cell, index, stateObj) {
         cellDiv.appendChild(healthDiv);
         cellDiv.style.backgroundColor = cell.color;
         cellDiv.addEventListener('click', () => handleCellClick(stateObj, index));
+
+        if (cell.stunned > 0) {
+            const stunnedIndicator = createStatusIndicator('stunned', cell.stunned);
+            cellDiv.appendChild(stunnedIndicator);
+        }
+        if (cell.mark > 0) {
+            const markedIndicator = createStatusIndicator('marked', cell.mark);
+            cellDiv.appendChild(markedIndicator);
+        }
     }
     return cellDiv;
+}
+
+function createStatusIndicator(status, value) {
+    const indicator = document.createElement('div');
+    indicator.className = `status-indicator ${status}-indicator`;
+    indicator.textContent = value;
+    return indicator;
 }
 
 
@@ -161,35 +169,16 @@ function resetUnitTurnStatus(units) {
 
 
 
-function executeAttack(stateObj, unit, attackIndex, targetIndex) {
+async function executeAttack(stateObj, unit, attackIndex, targetIndex) {
     const attack = unit.attacks[attackIndex];
     if (!attack) return stateObj;
 
-    stateObj = attack.execute(stateObj, targetIndex, attack);
+    stateObj = await attack.execute(stateObj, targetIndex, attack);
 
     return immer.produce(stateObj, draft => {
         const unitIndex = draft.playerArmy.findIndex(u => u.id === unit.id);
         if (unitIndex !== -1) {
             draft.playerArmy[unitIndex].unitAttackedThisTurn = true;
-        }
-    });
-}
-
-
-function applyDamage(stateObj, targetIndex, amount, accuracyModifier) {
-    return immer.produce(stateObj, draft => {
-        const targetUnit = draft.opponentArmy[targetIndex];
-        if (targetUnit) {
-            const distance = chebyshevDistance(stateObj.playerArmy[stateObj.selectedUnitIndex].currentSquare, targetUnit.currentSquare);
-            const hitRoll = Math.random();
-            const markPenalty = targetUnit.mark * 0.1; // Calculate mark penalty
-            const distMod = ((distance - 1) * accuracyModifier)
-            const threshold =  distMod - markPenalty; 
-            console.log("markpen " + markPenalty + " accmod " + accuracyModifier +" distnace " + distance +  " distMod " + distMod)
-            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
-            if (hitRoll > threshold) {
-                targetUnit.health -= amount;
-            }
         }
     });
 }
@@ -210,13 +199,6 @@ function applyStun(stateObj, targetIndex, duration) {
             targetUnit.stunned = duration;
         }
     });
-}
-
-function applyAreaEffect(stateObj, centerIndex, radius, effect) {
-    const affectedSquares = getSquaresInRadius(centerIndex, radius, stateObj.gridSize);
-    return affectedSquares.reduce((accStateObj, square) => {
-        return applyEffect(accStateObj, effect, square);
-    }, stateObj);
 }
 
 function whenUnitClicked(stateObj, unit) {

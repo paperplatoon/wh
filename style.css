@@ -14,7 +14,8 @@
 
 .bottom-button {
     width: 30vw;
-    height: 4vh;
+    height: auto;
+    padding: 0.5vh;
     margin-top: 3vh;
     align-self: center;
 }
@@ -40,6 +41,43 @@
     align-items: center;
     overflow: hidden;
     position: relative;
+}
+
+.status-indicator {
+    position: absolute;
+    width: 3vmin;
+    height: 3vmin;
+    border-radius: 20%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2vmin;
+    font-weight: bold;
+}
+
+.stunned-indicator {
+    background-color: rgb(218, 209, 29);
+    color: rgb(19, 17, 1);
+    border: 1px solid black;
+    padding: 0;
+    top: -0.2vmin;
+    left: -0.2vmin;
+    z-index: 2;
+}
+
+.marked-indicator {
+    background-color: rgb(218, 29, 29);
+    color: rgb(255, 255, 255);
+    border: 1px solid black;
+    padding: 0;
+    top: -0.2vmin;
+    right: -0.2vmin;
+    z-index: 2;
+}
+
+.grid-cell {
+    position: relative;
+    /* ... other existing styles ... */
 }
 
 .centered-img {
@@ -77,6 +115,10 @@
     animation: glowBlue 1s infinite;
 }
 
+.glow-orange {
+    animation: glowOrange 1s infinite;
+}
+
 @keyframes glowRed {
     0% {
         box-shadow: 0 0 5px 2px rgb(255, 0, 0); 
@@ -86,6 +128,18 @@
     }
     100% {
         box-shadow: 0 0 5px 2px rgb(255, 0, 0); 
+    }
+}
+
+@keyframes glowOrange {
+    0% {
+        box-shadow: 0 0 5px 2px rgb(233, 124, 21); 
+    }
+    50% {
+        box-shadow: 0 0 20px 15px rgba(232, 222, 213, 0); 
+    }
+    100% {
+        box-shadow: 0 0 5px 2px rgb(233, 124, 21); 
     }
 }
 

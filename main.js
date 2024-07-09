@@ -66,14 +66,14 @@ function renderGrid(stateObj) {
     
 }
 
-function renderGlowingSquares(stateObj) {
+async function renderGlowingSquares(stateObj) {
     const appDiv = document.getElementById('app');
     appDiv.innerHTML = ''; // Clear existing content
 
     const gridContainer = document.createElement('div');
     gridContainer.className = 'grid-container';
 
-    stateObj.grid.forEach((cell, index) => {
+    stateObj.grid.forEach(async (cell, index) => {
         const cellDiv = document.createElement('div');
         cellDiv.className = 'grid-cell';
         
@@ -83,6 +83,15 @@ function renderGlowingSquares(stateObj) {
             cellDiv.appendChild(avatar)
             cellDiv.appendChild(healthDiv)
             cellDiv.style.backgroundColor = cell.color
+
+            if (cell.stunned > 0) {
+                const stunnedIndicator = createStatusIndicator('stunned', cell.stunned);
+                cellDiv.appendChild(stunnedIndicator);
+            }
+            if (cell.mark > 0) {
+                const markedIndicator = createStatusIndicator('marked', cell.mark);
+                cellDiv.appendChild(markedIndicator);
+            }
         }
         
         if (stateObj.attackRangeSquares.includes(index)) {
@@ -131,7 +140,7 @@ function calculatePopupPosition(index) {
 
 
 
-function renderAttackPopup(stateObj) {
+async function renderAttackPopup(stateObj) {
     // Remove any existing popup
     const existingPopup = document.querySelector('.attack-popup');
     if (existingPopup) {
@@ -143,7 +152,7 @@ function renderAttackPopup(stateObj) {
     const distance = findTargetDistance(stateObj)
 
     // Add buttons to the popup
-    stateObj.attackOptions.forEach((attack, index) => {
+    stateObj.attackOptions.forEach(async (attack, index) => {
         const attackButton = createAttackButton(stateObj, attack);
         attackButton.onclick = () => {
             stateObj = handleAttackButtonClick(stateObj, index);
@@ -175,12 +184,12 @@ function handleCellClick(stateObj, index) {
     }
 }
 
-function handleAttackButtonClick(stateObj, attackOptionsIndex) {
+async function handleAttackButtonClick(stateObj, attackOptionsIndex) {
     const selectedUnit = stateObj.playerArmy[stateObj.selectedUnitIndex];
     const targetIndex = stateObj.targetEnemyIndex
     const attackIndex = selectedUnit.attacks.indexOf(stateObj.attackOptions[attackOptionsIndex])
 
-    stateObj = executeAttack(stateObj, selectedUnit, attackIndex, targetIndex);
+    stateObj = await executeAttack(stateObj, selectedUnit, attackIndex, targetIndex);
     stateObj = setBackToNormal(stateObj);
     stateObj = updateState(stateObj)
     return stateObj

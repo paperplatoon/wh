@@ -12,6 +12,7 @@ class BasicWarrior {
         this.currentSquare = unitCurrentSquare;
         this.id = id;
         this.mark = 0;
+        this.stunned=0;
         this.img = 'img/rifleman.png';
         this.attacks = [
             {
@@ -20,12 +21,7 @@ class BasicWarrior {
                 accuracyModifier: 0.15,
                 damage: 2,
                 execute: (stateObj, targetIndex, attack) => {
-                    if (this.playerOwned) {
-                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
-                    } else {
-                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
-                    }
-                    
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                 }
             },
             {
@@ -34,12 +30,7 @@ class BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 1,
                 execute: (stateObj, targetIndex, attack) => {
-                    if (this.playerOwned) {
-                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
-                    } else {
-                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
-                    }
-                    
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                 }
             },
         ];
@@ -64,12 +55,7 @@ class closeUpWarrior extends BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 1,
                 execute: (stateObj, targetIndex, attack) => {
-                    if (this.playerOwned) {
-                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
-                    } else {
-                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
-                    }
-                    
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                 }
             },
             {
@@ -78,12 +64,7 @@ class closeUpWarrior extends BasicWarrior {
                 accuracyModifier: 0.25,
                 damage: 4,
                 execute: (stateObj, targetIndex, attack) => {
-                    if (this.playerOwned) {
-                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
-                    } else {
-                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
-                    }
-                    
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                 }
             },
         ];
@@ -109,12 +90,7 @@ class minigunWarrior extends BasicWarrior {
                 damage: 0,
                 mark: 1,
                 execute: (stateObj, targetIndex, attack) => {
-                    if (this.playerOwned) {
-                        return applyMark(stateObj, targetIndex, attack.mark, true);
-                    } else {
-                        return applyMark(stateObj, targetIndex, attack.mark, false);
-                    }
-                    
+                    return applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
                 }
             },
             {
@@ -123,12 +99,7 @@ class minigunWarrior extends BasicWarrior {
                 accuracyModifier: 0.15,
                 damage: 3,
                 execute: (stateObj, targetIndex, attack) => {
-                    if (this.playerOwned) {
-                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
-                    } else {
-                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
-                    }
-                    
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                 }
             },
         ];
@@ -153,12 +124,7 @@ class speederBike extends BasicWarrior {
                 accuracyModifier: 0.2,
                 damage: 4,
                 execute: (stateObj, targetIndex, attack) => {
-                    if (this.playerOwned) {
-                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
-                    } else {
-                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
-                    }
-                    
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                 }
             },
             {
@@ -167,12 +133,78 @@ class speederBike extends BasicWarrior {
                 accuracyModifier: 0.15,
                 damage: 6,
                 execute: (stateObj, targetIndex, attack) => {
-                    if (this.playerOwned) {
-                        return applyDamage(stateObj, targetIndex, attack.damage, attack.accuracyModifier);
-                    } else {
-                        return applyPlayerDamage(stateObj, targetIndex, this.currentSquare, attack.damage, attack.accuracyModifier)
-                    }
-                    
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                }
+            },
+        ];
+    }
+}
+
+class stunner extends BasicWarrior {
+    constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
+        super(isPlayerOwned, id, color, unitCurrentSquare);
+        this.type = 'advancedWarrior';
+        this.health = 3;
+        this.color = color;
+        this.movementSquares = 3;
+        this.points = 2;
+        this.moveTowardsClosestEnemy = true;
+        this.img = 'img/bike.png',
+
+        this.attacks = [
+            {
+                name: "Stun Dart",
+                range: 5,
+                stun: 1,
+                accuracyModifier: 0.1,
+                damage: 1,
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyStun(stateObj, targetIndex, attack.stun, this.isPlayerOwned)
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                }
+            },
+            {
+                name: "Sword Swing - 3",
+                range: 1,
+                accuracyModifier: 0.1,
+                damage: 3,
+                execute: (stateObj, targetIndex, attack) => {
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                }
+            },
+        ];
+    }
+}
+
+class explosive extends BasicWarrior {
+    constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
+        super(isPlayerOwned, id, color, unitCurrentSquare);
+        this.type = 'advancedWarrior';
+        this.health = 3;
+        this.color = color;
+        this.movementSquares = 3;
+        this.points = 2;
+        this.moveTowardsClosestEnemy = true;
+        this.img = 'img/bike.png',
+
+        this.attacks = [
+            {
+                name: "Grenade",
+                range: 4,
+                radius: 2,
+                damage: 2,
+                explosive: true,
+                execute: (stateObj, targetIndex, attack) => {
+                    return applyAOEdamage(stateObj, targetIndex, attack, this.playerOwned);
+                }
+            },
+            {
+                name: "Pistol Shot - 1",
+                range: 5,
+                accuracyModifier: 0.1,
+                damage: 1,
+                execute: (stateObj, targetIndex, attack) => {
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                 }
             },
         ];
@@ -194,7 +226,7 @@ const playerLocations = getRandomNumbersInRange(0, 16, 4)
 const opponentLocations = getRandomNumbersInRange(47, 63, 4)
 console.log("player locatios " + playerLocations + " and opponents " + opponentLocations)
 
-const playerWarrior1 = new BasicWarrior(true, 0, "blue", playerLocations[0]);
+const playerWarrior1 = new explosive(true, 0, "blue", playerLocations[0]);
 const playerWarrior2 = new closeUpWarrior(true, 1, "blue", playerLocations[1]);
 const playerWarrior3 = new minigunWarrior(true, 2, "green", playerLocations[2]);
 const playerWarrior4 = new speederBike(true, 3, "gold", playerLocations[3]);
