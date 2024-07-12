@@ -3,6 +3,7 @@ class BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color = "white", unitCurrentSquare = 0) {
         this.health = 5;
         this.points = 2;
+        this.name = "rifleman"
         this.movementSquares = 2;
         this.playerOwned = isPlayerOwned;
         this.color = color;
@@ -12,7 +13,7 @@ class BasicWarrior {
         this.currentSquare = unitCurrentSquare;
         this.id = id;
         this.mark = 0;
-        this.stunned=0;
+        this.accuracy=0;
         this.img = 'img/rifleman.png';
         this.attacks = [
             {
@@ -22,15 +23,25 @@ class BasicWarrior {
                 damage: 2,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage. Medium accuracy. Long range"
+                    return textString
                 }
             },
             {
-                name: "Aimed Shot - 1",
+                name: "Aim Dart - 1",
                 range: 6,
                 accuracyModifier: 0.1,
                 damage: 1,
+                mark: 1,
                 execute: (stateObj, targetIndex, attack) => {
+                    stateObj = applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage. Apply " + this.attacks[i].mark + ".  High accuracy. Long range"
+                    return textString
                 }
             },
         ];
@@ -41,6 +52,7 @@ class closeUpWarrior extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
+        this.name = "Shotgunner"
         this.health = 4;
         this.color = color;
         this.movementSquares = 2;
@@ -51,11 +63,15 @@ class closeUpWarrior extends BasicWarrior {
         this.attacks = [
             {
                 name: "Pistol Shot - 1",
-                range: 5,
+                range: 4,
                 accuracyModifier: 0.1,
                 damage: 1,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  High accuracy. Medium range"
+                    return textString
                 }
             },
             {
@@ -65,6 +81,10 @@ class closeUpWarrior extends BasicWarrior {
                 damage: 4,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  Low accuracy. Close range"
+                    return textString
                 }
             },
         ];
@@ -76,6 +96,7 @@ class minigunWarrior extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
+        this.name = "Minigunner"
         this.health = 8;
         this.color = color;
         this.movementSquares = 1;
@@ -91,15 +112,23 @@ class minigunWarrior extends BasicWarrior {
                 mark: 1,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Apply " + this.attacks[i].mark + " mark.  Perfect accuracy. Long range"
+                    return textString
                 }
             },
             {
                 name: "Minigun - 3",
-                range: 4,
+                range: 5,
                 accuracyModifier: 0.15,
                 damage: 3,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  Medium accuracy. Long range"
+                    return textString
                 }
             },
         ];
@@ -110,6 +139,7 @@ class speederBike extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
+        this.name = "Speeder Bike"
         this.health = 7;
         this.color = color;
         this.movementSquares = 3;
@@ -119,12 +149,16 @@ class speederBike extends BasicWarrior {
 
         this.attacks = [
             {
-                name: "Front Guns - 4",
+                name: "Front Guns - 5",
                 range: 4,
                 accuracyModifier: 0.2,
-                damage: 4,
+                damage: 5,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  Medium-low accuracy. Medium range"
+                    return textString
                 }
             },
             {
@@ -134,6 +168,10 @@ class speederBike extends BasicWarrior {
                 damage: 6,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  High accuracy. Must be adjacent"
+                    return textString
                 }
             },
         ];
@@ -144,32 +182,41 @@ class stunner extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
+        this.name = "Scout"
         this.health = 3;
         this.color = color;
         this.movementSquares = 3;
         this.points = 2;
         this.moveTowardsClosestEnemy = true;
-        this.img = 'img/bike.png',
+        this.img = 'img/scout.png',
 
         this.attacks = [
             {
                 name: "Stun Dart",
-                range: 5,
+                range: 4,
                 stun: 1,
-                accuracyModifier: 0.1,
+                accuracyModifier: 0.05,
                 damage: 1,
                 execute: async (stateObj, targetIndex, attack) => {
                     stateObj = await applyStun(stateObj, targetIndex, attack.stun, this.isPlayerOwned)
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage. Lower target accuracy by " + this.attacks[i].stun + ". Very High accuracy. Medium range"
+                    return textString
                 }
             },
             {
-                name: "Sword Swing - 3",
+                name: "Sword Swing - 4",
                 range: 1,
                 accuracyModifier: 0.1,
-                damage: 3,
+                damage: 4,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  High accuracy. Must be adjacent"
+                    return textString
                 }
             },
         ];
@@ -180,32 +227,42 @@ class explosive extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
+        this.name = "Grenadier"
         this.health = 3;
         this.color = color;
-        this.movementSquares = 3;
+        this.movementSquares = 2;
         this.points = 2;
         this.moveTowardsClosestEnemy = true;
-        this.img = 'img/bike.png',
+        this.img = 'img/grenadier.png',
 
         this.attacks = [
             {
-                name: "Grenade",
+                name: "Frag Grenade",
                 range: 4,
                 radius: 2,
                 damage: 2,
                 explosive: true,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyAOEdamage(stateObj, targetIndex, attack, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage within " + this.attacks[i].radius + " squares. Perfect accuracy. Medium range"
+                    return textString
                 }
             },
             {
-                name: "Pistol Shot - 1",
-                range: 5,
+                name: "Dual Pistols - 2",
+                range: 3,
                 accuracyModifier: 0.1,
-                damage: 1,
+                damage: 2,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  High accuracy. Close range"
+                    return textString
                 }
+                
             },
         ];
     }
@@ -216,32 +273,42 @@ class explosive extends BasicWarrior {
 class buffer extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
-        this.type = 'advancedWarrior';
-        this.health = 3;
+        this.type = 'Lieutenant';
+        this.name = "Lieutenant"
+        this.health = 6;
         this.color = color;
         this.movementSquares = 3;
         this.points = 2;
         this.moveTowardsClosestEnemy = true;
-        this.img = 'img/goblin.png',
+        this.img = 'img/lieutenant.png',
 
         this.attacks = [
             {
                 name: "Inspire",
-                range: 4,
+                range: 3,
                 stun: -2,
                 buff: true,
                 execute: async (stateObj, targetIndex, attack) => {
                     stateObj = await applyStun(stateObj, targetIndex, attack.stun, !this.isPlayerOwned)
                     return stateObj
+                },
+                text: (i) => {
+                    let textString = "Raise ally accuracy by " + (-this.attacks[i].stun) + ".  Perfect accuracy. Close range"
+                    return textString
                 }
             },
             {
-                name: "Pistol Shot - 1",
-                range: 5,
+                name: "Huge Sword",
+                range: 1,
                 accuracyModifier: 0.1,
-                damage: 1,
+                damage: 4,
+                buff: false,
                 execute: (stateObj, targetIndex, attack) => {
                     return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  Perfect accuracy. Must be adjacent"
+                    return textString
                 }
             },
         ];

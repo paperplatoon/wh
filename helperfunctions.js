@@ -1,18 +1,13 @@
 function findTargetDistance(stateObj) {
     const selectedUnit = stateObj.playerArmy[stateObj.selectedUnitIndex];
-    const enemyUnit = stateObj.opponentArmy[stateObj.targetEnemyIndex];
+    const enemyUnit = (stateObj.targetEnemyIndex) ? stateObj.opponentArmy[stateObj.targetEnemyIndex] : stateObj.playerArmy[stateObj.targetAllyIndex]
     const distance = chebyshevDistance(selectedUnit.currentSquare, enemyUnit.currentSquare)
     return distance
 }
 
-
-
 function canBuffUnit(stateObj, index) {
     return stateObj.buffableSquares.includes(index);
 }
-
-
-
 
 
 function executeEnemyAttack(stateObj, attacker, target, attack) {
@@ -38,7 +33,7 @@ function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlayer) {
             const distance = chebyshevDistance(attackerSquare, targetUnit.currentSquare);
             const hitRoll = Math.random();
             const markBuff = targetUnit.mark * 0.1; // Calculate mark penalty
-            const stunnedPenalty = attackerUnit.stunned * 0.1;
+            const stunnedPenalty = attackerUnit.accuracy * 0.1;
             const distanceModifier = ((distance - 1) * attack.accuracyModifier)
             const threshold =  distanceModifier + stunnedPenalty - markBuff; 
             console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
@@ -72,16 +67,6 @@ function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
     });
 }
 
-
-function setBackToNormal(draft) {
-    draft.showAttackPopup = false;
-    draft.attackPopupPosition = null;
-    draft.attackOptions = null;
-    draft.targetEnemyIndex = null;
-    draft.selectedUnitIndex = null;
-    draft.currentScreen = "normalScreen";
-}
-
 function resetUnitTurnStatus(units) {
     units.forEach(unit => {
         unit.unitMovedThisTurn = false;
@@ -89,18 +74,34 @@ function resetUnitTurnStatus(units) {
     });
 }
 
-async function executeAttack(stateObj, unit, attackIndex, targetIndex) {
-    const attack = unit.attacks[attackIndex];
+async function executeAttack(stateObj, attackIndex, targetIndex) {
+    
+    const attack = stateObj.playerArmy[stateObj.selectedUnitIndex].attacks[attackIndex];
+    console.log('attack  ' + attack.name + " targind" + targetIndex)
     if (!attack) return stateObj;
 
-    stateObj = await attack.execute(stateObj, targetIndex, attack);
-
-    return immer.produce(stateObj, draft => {
-        const unitIndex = draft.playerArmy.findIndex(u => u.id === unit.id);
-        if (unitIndex !== -1) {
-            draft.playerArmy[unitIndex].unitAttackedThisTurn = true;
-        }
+    stateObj = immer.produce(stateObj, draft => {
+        console.log(draft.playerArmy[draft.selectedUnitIndex].name)
+        draft.playerArmy[draft.selectedUnitIndex].unitAttackedThisTurn = true;
     });
+
+    stateObj = await attack.execute(stateObj, targetIndex, attack);
+    return stateObj
+}
+
+async function executeBuffAttack(stateObj, attackIndex, targetIndex) {
+    
+    const attack = stateObj.playerArmy[stateObj.selectedUnitIndex].attacks[attackIndex];
+    console.log('attack  ' + attack.name + " targind" + targetIndex + " buff")
+    if (!attack) return stateObj;
+
+    stateObj = immer.produce(stateObj, draft => {
+        console.log(draft.playerArmy[draft.selectedUnitIndex].name)
+        draft.playerArmy[draft.selectedUnitIndex].unitAttackedThisTurn = true;
+    });
+
+    stateObj = await attack.execute(stateObj, targetIndex, attack);
+    return stateObj
 }
 
 function applyMark(stateObj, targetIndex, amount, isPlayer) {
@@ -116,7 +117,7 @@ async function applyStun(stateObj, targetIndex, amount, isPlayer) {
     return immer.produce(stateObj, draft => {
         const targetUnit = !isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
         if (targetUnit) {
-            targetUnit.stunned += amount;
+            targetUnit.accuracy += amount;
         }
     });
 }
@@ -148,7 +149,9 @@ function getUnitActionSquares(unit, gridSize) {
 
     getSquaresInRange(currentRow, currentCol, unit.movementSquares, gridSize, movableSquares);
     unit.attacks.forEach(attack => {
-        getSquaresInRange(currentRow, currentCol, attack.range, gridSize, attackRangeSquares);
+        if (!attack.buff) {
+            getSquaresInRange(currentRow, currentCol, attack.range, gridSize, attackRangeSquares);
+        }
     });
 
     return { 

@@ -1,3 +1,5 @@
+//the problem is that buffs don't work
+//they don't even appear unless the buffer is in range of an ENEMY
 let state = {
     currentScreen: "normalScreen",
     playerTurn: true,
@@ -86,8 +88,8 @@ async function renderGlowingSquares(stateObj) {
             cellDiv.appendChild(healthDiv)
             cellDiv.style.backgroundColor = cell.color
 
-            if (cell.stunned > 0) {
-                const stunnedIndicator = createStatusIndicator('stunned', cell.stunned);
+            if (cell.accuracy > 0) {
+                const stunnedIndicator = createStatusIndicator('stunned', cell.accuracy);
                 cellDiv.appendChild(stunnedIndicator);
             }
             if (cell.mark > 0) {
@@ -115,6 +117,8 @@ async function renderGlowingSquares(stateObj) {
     });
 
     appDiv.appendChild(gridContainer);
+    let attackRowDiv = createAttackDivs(stateObj.playerArmy[stateObj.selectedUnitIndex])
+    appDiv.appendChild(attackRowDiv)
 }
 
 function calculatePopupPosition(index) {
@@ -147,17 +151,16 @@ async function renderAttackPopup(stateObj) {
     popup.className = 'attack-popup';
 
     // Add buttons to the popup
-    stateObj.attackOptions.forEach(async (attack, index) => {
-        const attackButton = createAttackButton(stateObj, attack);
-        attackButton.onclick = async () => {
-            if (attack.buff) {
-                stateObj = await handleBuffAttack(stateObj, index);
-            } else {
-                stateObj = handleAttackButtonClick(stateObj, index);
-            } 
-        };
-        popup.appendChild(attackButton);
-    });
+    for (let i=0; i < stateObj.attackOptions.length; i++ ) {
+        let attack = stateObj.attackOptions[i]
+        if ( (stateObj.targetEnemyIndex !== null && !attack.buff) || (stateObj.targetAllyIndex !== null && attack.buff) ) {
+            const attackButton = createAttackButton(stateObj, attack);
+            attackButton.onclick = async () => {
+                    stateObj = handleAttackButtonClick(stateObj, index);
+            };
+            popup.appendChild(attackButton);
+        } 
+    }
     
     const position = calculatePopupPosition(stateObj.attackPopupPosition);
 
@@ -173,7 +176,8 @@ function handleCellClick(stateObj, index) {
     const clickedUnit = stateObj.playerArmy.find(unit => unit.currentSquare === index);
     if (clickedUnit && (!clickedUnit.unitMovedThisTurn || !clickedUnit.unitAttackedThisTurn)) {
         stateObj = whenUnitClicked(stateObj, clickedUnit);
-        if (!clickedUnit.unitMovedThisTurn || (!clickedUnit.unitAttackedThisTurn && stateObj.attackRangeSquares.length > 0)) {
+        //allow buffs
+        if (!clickedUnit.unitMovedThisTurn || (!clickedUnit.unitAttackedThisTurn && (stateObj.attackRangeSquares.length > 0 || stateObj.buffableSquares.length > 0 ))) {
             stateObj = immer.produce(stateObj, draft => {
                 draft.selectedUnitIndex = draft.playerArmy.indexOf(clickedUnit);
                 draft.currentScreen = "chooseSquareToMove";
@@ -183,38 +187,15 @@ function handleCellClick(stateObj, index) {
     }
 }
 
-async function handleBuffAttack(stateObj, attackIndex) {
-    const selectedUnit = stateObj.playerArmy[stateObj.selectedUnitIndex];
-    const targetAlly = stateObj.playerArmy[stateObj.targetAllyIndex];
-    const buffAttack = selectedUnit.attacks[attackIndex];
-
-    stateObj = await buffAttack.execute(stateObj, stateObj.targetAllyIndex, buffAttack);
-    stateObj = setBackToNormal(stateObj);
-    stateObj = updateState(stateObj);
-    return stateObj;
-}
-
 async function handleAttackButtonClick(stateObj, attackOptionsIndex) {
     const selectedUnit = stateObj.playerArmy[stateObj.selectedUnitIndex];
-    const targetIndex = stateObj.targetEnemyIndex
+    const targetIndex = (stateObj.targetEnemyIndex) ? stateObj.targetEnemyIndex : stateObj.targetAllyIndex
     const attackIndex = selectedUnit.attacks.indexOf(stateObj.attackOptions[attackOptionsIndex])
 
-    stateObj = await executeAttack(stateObj, selectedUnit, attackIndex, targetIndex);
+    stateObj = await executeAttack(stateObj, attackIndex, targetIndex);
     stateObj = setBackToNormal(stateObj);
     stateObj = updateState(stateObj)
     return stateObj
-}
-
-function prepareBuffAttack(stateObj, index) {
-    return immer.produce(stateObj, draft => {
-        const selectedUnit = draft.playerArmy[draft.selectedUnitIndex];
-        const buffAttacks = selectedUnit.attacks.filter(attack => attack.buff);
-        
-        draft.showAttackPopup = true;
-        draft.attackPopupPosition = index;
-        draft.attackOptions = buffAttacks;
-        draft.targetAllyIndex = draft.playerArmy.findIndex(unit => unit.currentSquare === index);
-    });
 }
 
 function handleMoveToSquare(stateObj, index) {
@@ -223,9 +204,9 @@ function handleMoveToSquare(stateObj, index) {
         stateObj = moveUnitToSquare(stateObj, index);
         stateObj = clearSelectionAndGlowingSquares(stateObj)
     } else if (canAttackSquare(stateObj, index)) {
-        stateObj = prepareAttack(stateObj, index);
+        stateObj = prepareAttack(stateObj, index, true);
     } else if (canBuffUnit(stateObj, index)) {
-        stateObj = prepareBuffAttack(stateObj, index);
+        stateObj = prepareAttack(stateObj, index, false);
     }else {
         stateObj = setBackToNormal(clearSelectionAndGlowingSquares(stateObj));
     }
@@ -259,14 +240,15 @@ function canAttackSquare(stateObj, index) {
            stateObj.attackRangeSquares.includes(index);
 }
 
-function prepareAttack(stateObj, index) {
+function prepareAttack(stateObj, index, targetingEnemy) {
     return immer.produce(stateObj, draft => {
         const selectedUnit = draft.playerArmy[draft.selectedUnitIndex];
-        const enemyUnit = draft.opponentArmy.find(unit => unit.currentSquare === index);
+        const enemyUnit = (targetingEnemy) ? draft.opponentArmy.find(unit => unit.currentSquare === index) : draft.playerArmy.find(unit => unit.currentSquare === index)
         draft.showAttackPopup = true;
         draft.attackPopupPosition = index;
         draft.attackOptions = getValidAttacks(selectedUnit, index);
-        draft.targetEnemyIndex = draft.opponentArmy.indexOf(enemyUnit);
+        draft.targetEnemyIndex = (draft.opponentArmy.indexOf(enemyUnit) !== -1) ? draft.opponentArmy.indexOf(enemyUnit) : null
+        draft.targetAllyIndex = (draft.playerArmy.indexOf(enemyUnit) !== -1) ? draft.playerArmy.indexOf(enemyUnit) : null
     });
 }
 
@@ -288,7 +270,11 @@ function setBackToNormal(stateObj) {
         draft.attackPopupPosition = null;
         draft.attackOptions = null;
         draft.targetEnemyIndex = null;
+        draft.targetAllyIndex = null;
         draft.selectedUnitIndex = null;
+        draft.movableSquares = []
+        draft.buffableSquares = []
+        draft.attackRangeSquares = []
         draft.currentScreen = "normalScreen";
     });
 }
@@ -441,9 +427,11 @@ function whenUnitClicked(stateObj, unit) {
         }
 
         if (!unit.unitAttackedThisTurn) {
+            console.log(unit.name + " has not attacked this turn")
             unit.attacks.forEach(attack => {
                 if (attack.buff) {
                     const buffableSquares = getBuffableSquares(unit, attack, draft);
+                    console.log("getting buffable squares " + buffableSquares)
                     draft.buffableSquares.push(...buffableSquares);
                 } else {
                     const enemySquares = attackRangeSquares.filter(square => 
@@ -454,8 +442,6 @@ function whenUnitClicked(stateObj, unit) {
                 }
             });
         }
-
-
     });
 }
 

@@ -18,6 +18,36 @@
     padding: 0.5vh;
     margin-top: 3vh;
     align-self: center;
+    cursor: pointer;
+}
+
+.player-done {
+    background-color: rgb(215, 75, 103);
+    cursor: pointer;
+}
+
+.attack-bottom-row-div {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    height: 9vh;
+    width: 95vw;
+    margin: 2vw 0;;
+}
+
+.attack-bottom-div {
+    width: 45vw;
+    margin: 0 1vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    background-color: grey;
+    font-size: 3vmin;
+    color: white;
+}
+
+.attack-text-div {
+    font-size: 2.5vmin;
 }
 
 .grid-container {
@@ -56,13 +86,16 @@
 }
 
 .stunned-indicator {
-    background-color: rgb(218, 209, 29);
-    color: rgb(19, 17, 1);
+    background-color: rgb(255, 255, 255);
+    color: rgb(218, 193, 3);
     border: 1px solid black;
+    width: 3vw;
+    height: 2vh;
+    border-radius: 40%;
     padding: 0;
-    top: -0.2vmin;
+    top: 3vh;
     left: -0.2vmin;
-    z-index: 2;
+    z-index: 1000;
 }
 
 .stunned-indicator-buff {
@@ -76,13 +109,14 @@
 }
 
 .marked-indicator {
-    background-color: rgb(218, 29, 29);
-    color: rgb(255, 255, 255);
-    border: 1px solid black;
+    border-radius: 50%;
+    background-color: rgba(218, 29, 29, 0.709);
+    color: rgba(255, 255, 255, 0.805);
+    border: 2px solid rgba(255, 255, 255, 0.824);
     padding: 0;
-    top: -0.2vmin;
-    right: -0.2vmin;
-    z-index: 2;
+    top: -0.3vh;
+    left: 4vw;
+    z-index: 10;
 }
 
 .grid-cell {
@@ -110,19 +144,20 @@
 
 
 @keyframes glowBlue {
-    0% { background-color: white;
-        box-shadow: 0 0 5px 2px blue; 
+    0% { background-color: rgba(255, 255, 255, 0.347);
+        box-shadow: 0 0 1.5vmin 1.5vmin blue; 
     }
-    50% { background-color: rgb(1, 244, 232);
-        box-shadow: 0 0 10px 5px blue; 
+    50% { background-color: rgba(1, 244, 232, 0.391);
+        box-shadow: 0 0 0.5vmin 0.5vmin rgb(0, 255, 255); 
     }
-    100% { background-color: white;
-        box-shadow: 0 0 5px 2px blue; 
+    100% { background-color: rgba(255, 255, 255, 0.333);
+        box-shadow: 0 0 1.5vmin 1.5vmin blue; 
     }
 }
 
 .glow-blue {
     animation: glowBlue 1s infinite;
+    cursor: pointer;
 }
 
 .glow-orange {
@@ -130,7 +165,8 @@
 }
 
 .glow-green {
-    box-shadow: 0 0 20px 3px green;
+    animation: glowGreen 1s infinite;
+    cursor: pointer;
 }
 
 @keyframes glowRed {
@@ -157,8 +193,21 @@
     }
 }
 
+@keyframes glowGreen {
+    0% {
+        box-shadow: 0 0 5px 2px rgb(8, 214, 42); 
+    }
+    50% {
+        box-shadow: 0 0 20px 1px rgba(213, 232, 217, 0.444); 
+    }
+    100% {
+        box-shadow: 0 0 5px 2px rgb(8, 214, 42) 
+    }
+}
+
 .glow-red {
     animation: glowRed 1s infinite;
+    cursor: crosshair;
 }
 
 .attack-popup {
