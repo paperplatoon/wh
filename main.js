@@ -5,7 +5,7 @@ let state = {
     playerTurn: true,
     turnCounter: 0,
     playerArmy: [playerWarrior1, playerWarrior2, playerWarrior3, playerWarrior4],
-    opponentArmy: [opponentWarrior1, opponentWarrior2, opponentWarrior3],
+    opponentArmy: [opponentWarrior1, opponentWarrior2, opponentWarrior3, opponentWarrior4],
     movableSquares: [],
     attackRangeSquares: [],
     buffableSquares: [],
@@ -92,7 +92,7 @@ async function renderGlowingSquares(stateObj) {
                 const stunnedIndicator = createStatusIndicator('stunned', cell.accuracy);
                 cellDiv.appendChild(stunnedIndicator);
             }
-            if (cell.mark > 0) {
+            if (cell.mark !== 0) {
                 const markedIndicator = createStatusIndicator('marked', cell.mark);
                 cellDiv.appendChild(markedIndicator);
             }
@@ -156,7 +156,7 @@ async function renderAttackPopup(stateObj) {
         if ( (stateObj.targetEnemyIndex !== null && !attack.buff) || (stateObj.targetAllyIndex !== null && attack.buff) ) {
             const attackButton = createAttackButton(stateObj, attack);
             attackButton.onclick = async () => {
-                    stateObj = handleAttackButtonClick(stateObj, index);
+                    stateObj = handleAttackButtonClick(stateObj, i);
             };
             popup.appendChild(attackButton);
         } 
@@ -293,6 +293,19 @@ function renderScreen(stateObj) {
     }
 }
 
+function moveEnemyUnit(draft, enemy) {
+    const movements = {
+      "towardsClosestEnemy": moveTowardsClosestPlayer,
+      "awayFromEnemy": moveAwayFromAllPlayers,
+      "awayFromAll": moveAwayFromAllUnits,
+      "moveTowardsFellows": moveTowardsClosestFellow,
+      "moveTowardsLeader": moveTowardsLeader,
+    };
+  
+    const movement = movements[enemy.movement];
+    movement(draft, enemy);
+}
+
 function checkForDeath(stateObj) {
     return immer.produce(stateObj, draft => {
         // Check player army
@@ -342,11 +355,7 @@ function EnemiesMove(stateObj) {
 function moveEnemy(stateObj, enemy) {
     return immer.produce(stateObj, draft => {
         const currentEnemy = draft.opponentArmy.find(e => e.id === enemy.id);
-        if (currentEnemy.moveTowardsClosestEnemy) {
-            moveTowardsClosestPlayer(draft, currentEnemy);
-        } else {
-            moveAwayFromAllPlayers(draft, currentEnemy);
-        }
+        moveEnemyUnit(draft, currentEnemy)
         updateGrid(draft);
     });
 }
@@ -392,6 +401,69 @@ function moveTowardsClosestPlayer(draft, enemy) {
     }
 }
 
+function moveTowardsClosestFellow(draft, enemy) {
+    let closestPlayer = null;
+    let minDistance = Infinity;
+
+    draft.opponentArmy.forEach(player => {
+        const distance = chebyshevDistance(enemy.currentSquare, player.currentSquare);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestPlayer = player;
+        }
+    });
+
+    if (closestPlayer) {
+        const possibleMoves = getPossibleMoves(draft, enemy);
+        let bestMove = enemy.currentSquare;
+        let bestMoveDistance = minDistance;
+
+        possibleMoves.forEach(move => {
+            const distance = chebyshevDistance(move, closestPlayer.currentSquare);
+            if (distance < bestMoveDistance) {
+                bestMoveDistance = distance;
+                bestMove = move;
+            }
+        });
+        enemy.currentSquare = bestMove;
+    }
+}
+
+function moveTowardsLeader(draft, enemy) {
+    let closestPlayer = null;
+    let minDistance = Infinity;
+    const leader = draft.opponentArmy.find(unit => unit.leader === true)
+
+    if (leader) {
+        console.log("has leader")
+        minDistance = chebyshevDistance(enemy.currentSquare, leader.currentSquare)
+        closestPlayer = leader
+    } else {
+        draft.opponentArmy.forEach(player => {
+            const distance = chebyshevDistance(enemy.currentSquare, player.currentSquare);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestPlayer = player;
+            }
+        });
+    }
+
+    if (closestPlayer) {
+        const possibleMoves = getPossibleMoves(draft, enemy);
+        let bestMove = enemy.currentSquare;
+        let bestMoveDistance = minDistance;
+
+        possibleMoves.forEach(move => {
+            const distance = chebyshevDistance(move, closestPlayer.currentSquare);
+            if (distance < bestMoveDistance) {
+                bestMoveDistance = distance;
+                bestMove = move;
+            }
+        });
+        enemy.currentSquare = bestMove;
+    }
+}
+
 function moveAwayFromAllPlayers(draft, enemy) {
     const possibleMoves = getPossibleMoves(draft, enemy);
     let bestMove = enemy.currentSquare;
@@ -400,11 +472,50 @@ function moveAwayFromAllPlayers(draft, enemy) {
     possibleMoves.forEach(move => {
         let minDistance = Infinity;
         draft.playerArmy.forEach(player => {
+            //find closest distance for each player
+            const distance = chebyshevDistance(move, player.currentSquare);
+            //if player is closer than any other, make that the new minimum distance
+            if (distance < minDistance) {
+                minDistance = distance;
+            }
+        });
+        //if that new minimum distance is larger than the established best move, make this the new best move
+        if (minDistance > maxMinDistance) {
+            maxMinDistance = minDistance;
+            bestMove = move;
+        }
+    });
+
+    enemy.currentSquare = bestMove;
+}
+
+function moveAwayFromAllUnits(draft, enemy) {
+    const possibleMoves = getPossibleMoves(draft, enemy);
+    let bestMove = enemy.currentSquare;
+    let maxMinDistance = 0;
+
+    possibleMoves.forEach(move => {
+        let minDistance = Infinity;
+
+        // Find the closest distance for each player unit
+        draft.playerArmy.forEach(player => {
             const distance = chebyshevDistance(move, player.currentSquare);
             if (distance < minDistance) {
                 minDistance = distance;
             }
         });
+
+        // Find the closest distance for each opponent unit, excluding the current enemy
+        draft.opponentArmy.forEach(opponent => {
+            if (opponent.id !== enemy.id) {
+                const distance = chebyshevDistance(move, opponent.currentSquare);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                }
+            }
+        });
+
+        // If that new minimum distance is larger than the established best move, make this the new best move
         if (minDistance > maxMinDistance) {
             maxMinDistance = minDistance;
             bestMove = move;
@@ -427,11 +538,9 @@ function whenUnitClicked(stateObj, unit) {
         }
 
         if (!unit.unitAttackedThisTurn) {
-            console.log(unit.name + " has not attacked this turn")
             unit.attacks.forEach(attack => {
                 if (attack.buff) {
                     const buffableSquares = getBuffableSquares(unit, attack, draft);
-                    console.log("getting buffable squares " + buffableSquares)
                     draft.buffableSquares.push(...buffableSquares);
                 } else {
                     const enemySquares = attackRangeSquares.filter(square => 

@@ -86,7 +86,6 @@ function createStatusIndicator(status, value) {
 function createAttackDivs(unit) {
     const rowDiv = document.createElement('div');
     rowDiv.classList.add('attack-bottom-row-div')
-    console.log(unit.attacks.length)
 
     for (let i=0; i<unit.attacks.length; i++) {
         const attackDiv = document.createElement('div');

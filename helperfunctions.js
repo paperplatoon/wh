@@ -10,7 +10,7 @@ function canBuffUnit(stateObj, index) {
 }
 
 
-function executeEnemyAttack(stateObj, attacker, target, attack) {
+async function executeEnemyAttack(stateObj, attacker, target, attack) {
     const targetIndex = stateObj.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
     stateObj = attack.execute(stateObj, targetIndex, attack);
     return immer.produce(stateObj, draft => {
@@ -45,11 +45,11 @@ function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlayer) {
 }
 
 
-function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
+async function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
     centerIndex = (isPlayer) ? stateObj.opponentArmy[targetIndex].currentSquare : stateObj.playerArmy[targetIndex].currentSquare
     return immer.produce(stateObj, draft => {
         const affectedSquares = getSquaresInRadius(centerIndex, attack.radius, draft.gridSize);
-        console.log(affectedSquares)
+        console.log("hits" + affectedSquares)
         affectedSquares.forEach(square => {
             const targetUnit = draft.grid[square];
             if (targetUnit !== 0) {
@@ -77,11 +77,9 @@ function resetUnitTurnStatus(units) {
 async function executeAttack(stateObj, attackIndex, targetIndex) {
     
     const attack = stateObj.playerArmy[stateObj.selectedUnitIndex].attacks[attackIndex];
-    console.log('attack  ' + attack.name + " targind" + targetIndex)
     if (!attack) return stateObj;
 
     stateObj = immer.produce(stateObj, draft => {
-        console.log(draft.playerArmy[draft.selectedUnitIndex].name)
         draft.playerArmy[draft.selectedUnitIndex].unitAttackedThisTurn = true;
     });
 
@@ -92,11 +90,9 @@ async function executeAttack(stateObj, attackIndex, targetIndex) {
 async function executeBuffAttack(stateObj, attackIndex, targetIndex) {
     
     const attack = stateObj.playerArmy[stateObj.selectedUnitIndex].attacks[attackIndex];
-    console.log('attack  ' + attack.name + " targind" + targetIndex + " buff")
     if (!attack) return stateObj;
 
     stateObj = immer.produce(stateObj, draft => {
-        console.log(draft.playerArmy[draft.selectedUnitIndex].name)
         draft.playerArmy[draft.selectedUnitIndex].unitAttackedThisTurn = true;
     });
 

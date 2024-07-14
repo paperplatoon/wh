@@ -4,6 +4,7 @@ class BasicWarrior {
         this.health = 5;
         this.points = 2;
         this.name = "rifleman"
+        this.leader = false;
         this.movementSquares = 2;
         this.playerOwned = isPlayerOwned;
         this.color = color;
@@ -12,6 +13,7 @@ class BasicWarrior {
         this.moveTowardsClosestEnemy = false;
         this.currentSquare = unitCurrentSquare;
         this.id = id;
+        this.movement = "moveTowardsLeader";
         this.mark = 0;
         this.accuracy=0;
         this.img = 'img/rifleman.png';
@@ -48,6 +50,59 @@ class BasicWarrior {
     }
 }
 
+class Samurai extends BasicWarrior {
+    constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
+        super(isPlayerOwned, id, color, unitCurrentSquare);
+        this.name = "Samurai"
+        this.health = 5;
+        this.color = color;
+        this.movementSquares = 2;
+        this.leader = false;
+        this.points = 3;
+        this.movement = "awayFromAll";
+        this.moveTowardsClosestEnemy = true;
+        this.img = 'img/samurai.png';
+
+        this.attacks = [
+            {
+                name: "Kunai - 1",
+                range: 4,
+                accuracyModifier: 0.1,
+                damage: 1,
+                mark: -2,
+                execute: (stateObj, targetIndex, attack) => {
+                    const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
+                    stateObj = applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
+                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  Increase evasiveness by + " + (-this.attacks[i].mark) + ". High accuracy. Medium range"
+                    return textString
+                }
+            },
+            {
+                name: "Tracking Shot - 2",
+                range: 6,
+                accuracyModifier: 0.05,
+                damage: 4,
+                mark: -1,
+                execute: (stateObj, targetIndex, attack) => {
+                    const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
+                    stateObj = applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
+                    stateObj = applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
+                },
+                text: (i) => {
+                    let textString = "Deal " + this.attacks[i].damage + " damage.  Increase evasiveness by + " + (-this.attacks[i].mark) + ". Very high accuracy. Medium range"
+                    return textString
+                }
+            },
+        ];
+    }
+}
+
+
+
 class closeUpWarrior extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
@@ -57,6 +112,8 @@ class closeUpWarrior extends BasicWarrior {
         this.color = color;
         this.movementSquares = 2;
         this.points = 2;
+        this.leader = false;
+        this.movement = "towardsClosestEnemy";
         this.moveTowardsClosestEnemy = true;
         this.img = 'img/shotgun.png';
 
@@ -97,11 +154,13 @@ class minigunWarrior extends BasicWarrior {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
         this.name = "Minigunner"
+        this.leader = false;
         this.health = 8;
         this.color = color;
         this.movementSquares = 1;
         this.points = 4;
         this.moveTowardsClosestEnemy = true;
+        this.movement = "towardsClosestEnemy";
         this.img = 'img/minigun.png',
 
         this.attacks = [
@@ -145,6 +204,8 @@ class speederBike extends BasicWarrior {
         this.movementSquares = 3;
         this.points = 8;
         this.moveTowardsClosestEnemy = true;
+        this.leader = false;
+        this.movement = "towardsClosestEnemy";
         this.img = 'img/bike.png',
 
         this.attacks = [
@@ -186,8 +247,10 @@ class stunner extends BasicWarrior {
         this.health = 3;
         this.color = color;
         this.movementSquares = 3;
+        this.leader = false;
         this.points = 2;
         this.moveTowardsClosestEnemy = true;
+        this.movement = "towardsClosestEnemy";
         this.img = 'img/scout.png',
 
         this.attacks = [
@@ -230,9 +293,11 @@ class explosive extends BasicWarrior {
         this.name = "Grenadier"
         this.health = 3;
         this.color = color;
+        this.leader = false;
         this.movementSquares = 2;
         this.points = 2;
         this.moveTowardsClosestEnemy = true;
+        this.movement = "towardsClosestEnemy";
         this.img = 'img/grenadier.png',
 
         this.attacks = [
@@ -270,16 +335,18 @@ class explosive extends BasicWarrior {
 
 //buffAttack.execute(stateObj, stateObj.targetAllyIndex, buffAttack);
 
-class buffer extends BasicWarrior {
+class Lieutenant extends BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color="white", unitCurrentSquare = 1) {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'Lieutenant';
         this.name = "Lieutenant"
+        this.leader = true;
         this.health = 6;
         this.color = color;
         this.movementSquares = 3;
         this.points = 2;
         this.moveTowardsClosestEnemy = true;
+        this.movement = "towardsClosestEnemy";
         this.img = 'img/lieutenant.png',
 
         this.attacks = [
@@ -328,15 +395,14 @@ function getRandomNumbersInRange(x, y, arraySize) {
 
 const playerLocations = getRandomNumbersInRange(0, 16, 4)
 const opponentLocations = getRandomNumbersInRange(47, 63, 4)
-console.log("player locatios " + playerLocations + " and opponents " + opponentLocations)
 
 const playerWarrior1 = new stunner(true, 0, "blue", playerLocations[0]);
-const playerWarrior2 = new buffer(true, 1, "blue", playerLocations[1]);
+const playerWarrior2 = new Lieutenant(true, 1, "blue", playerLocations[1]);
 const playerWarrior3 = new minigunWarrior(true, 2, "green", playerLocations[2]);
 const playerWarrior4 = new speederBike(true, 3, "gold", playerLocations[3]);
 
 const opponentWarrior1 = new BasicWarrior(false, 4, "red",  opponentLocations[0]);
 const opponentWarrior2 = new BasicWarrior(false, 5, "red", opponentLocations[1]);
-const opponentWarrior3 = new BasicWarrior(false, 6, "red", opponentLocations[2]);
-const opponentWarrior4 = new BasicWarrior(false, 7, "red", opponentLocations[3]);
+const opponentWarrior3 = new Lieutenant(false, 6, "red", opponentLocations[2]);
+const opponentWarrior4 = new Samurai(false, 7, "red", opponentLocations[3]);
 
