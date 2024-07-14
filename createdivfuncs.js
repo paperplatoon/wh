@@ -128,3 +128,55 @@ function createGridCell(cell, index, stateObj) {
     }
     return cellDiv;
 }
+
+function createUnitSelectionDiv(unit, stateObj) {
+    const unitDiv = document.createElement('div');
+    unitDiv.className = 'unit-selection';
+    
+    const avatar = createImageAvatar(unit);
+    const nameDiv = document.createElement('div');
+    nameDiv.textContent = unit.name;
+    const pointsDiv = document.createElement('div');
+    pointsDiv.textContent = `Points: ${unit.points}`;
+
+    unitDiv.appendChild(avatar);
+    unitDiv.appendChild(nameDiv);
+    unitDiv.appendChild(pointsDiv);
+
+    unitDiv.addEventListener('click', () => {
+        if (stateObj.selectedArmyPoints + unit.points <= stateObj.maxArmyPoints) {
+            stateObj = addUnitToArmy(stateObj, unit);
+            updateState(stateObj);
+        }
+    });
+
+    return unitDiv;
+}
+
+function createStartGameButton(stateObj) {
+    const startButton = document.createElement('button');
+    startButton.textContent = 'Start Game';
+    startButton.className = 'bottom-button';
+    startButton.disabled = stateObj.selectedArmyPoints === 0;
+    
+    startButton.addEventListener('click', () => {
+        stateObj = startGame(stateObj);
+        updateState(stateObj);
+    });
+
+    return startButton;
+}
+
+function createStartGameButton(stateObj) {
+    const startButton = document.createElement('button');
+    startButton.textContent = 'Start Game';
+    startButton.className = 'bottom-button';
+    startButton.disabled = stateObj.selectedArmyPoints === 0;
+    
+    startButton.addEventListener('click', () => {
+        stateObj = startGame(stateObj);
+        updateState(stateObj);
+    });
+
+    return startButton;
+}

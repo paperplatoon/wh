@@ -36,9 +36,11 @@ function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlayer) {
             const stunnedPenalty = attackerUnit.accuracy * 0.1;
             const distanceModifier = ((distance - 1) * attack.accuracyModifier)
             const threshold =  distanceModifier + stunnedPenalty - markBuff; 
-            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
             if (hitRoll > threshold) {
+                console.log(attackerUnit.name + " hits with " + attack.name + "! Needed to beat " + Math.round(threshold*100)/100 + " and rolled a " + Math.round(hitRoll*100)/100);
                 targetUnit.health -= attack.damage;
+            } else {
+                console.log(attackerUnit.name + " misses with " + attack.name + "! Needed to beat " + Math.round(threshold*100)/100 + " but rolled a " + Math.round(hitRoll*100)/100);
             }
         }
     });
@@ -133,6 +135,27 @@ function getBuffableSquares(unit, attack, draft) {
     }
 
     return buffableSquares;
+}
+
+
+function addUnitToArmy(stateObj, unit) {
+    return immer.produce(stateObj, draft => {
+        const newUnit = new unit.constructor(true, draft.currentUnitID++, "blue");
+        draft.selectedArmy.push(newUnit);
+        draft.selectedArmyPoints += unit.points;
+    });
+}
+
+function startGame(stateObj) {
+    return immer.produce(stateObj, draft => {
+        const playerLocations = getRandomNumbersInRange(0, 16, draft.selectedArmy.length)
+        for (let i=0; i < draft.selectedArmy.length; i++) {
+            draft.selectedArmy[i].currentSquare = playerLocations[i]
+        }
+        draft.playerArmy = draft.selectedArmy;
+        draft.currentScreen = "normalScreen";
+        updateGrid(draft);
+    });
 }
 
 

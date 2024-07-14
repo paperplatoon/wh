@@ -1,7 +1,7 @@
 //the problem is that buffs don't work
 //they don't even appear unless the buffer is in range of an ENEMY
 let state = {
-    currentScreen: "normalScreen",
+    currentScreen: "armySelectionScreen",
     playerTurn: true,
     turnCounter: 0,
     playerArmy: [playerWarrior1, playerWarrior2, playerWarrior3, playerWarrior4],
@@ -18,6 +18,9 @@ let state = {
     targetEnemyIndex: null,
     targetAllyIndex: null,
     currentUnitID: 4,
+    selectedArmyPoints: 0,
+    maxArmyPoints: 10, // Adjust this value as needed
+    selectedArmy: [],
 };
 
 function handleEndTurn(stateObj) {
@@ -281,6 +284,7 @@ function setBackToNormal(stateObj) {
 
 function renderScreen(stateObj) {
     const screenRenderers = {
+      "armySelectionScreen": renderArmySelectionScreen,
       "normalScreen": renderGrid,
       "chooseSquareToMove": renderGlowingSquares
     };
@@ -435,7 +439,6 @@ function moveTowardsLeader(draft, enemy) {
     const leader = draft.opponentArmy.find(unit => unit.leader === true)
 
     if (leader) {
-        console.log("has leader")
         minDistance = chebyshevDistance(enemy.currentSquare, leader.currentSquare)
         closestPlayer = leader
     } else {
@@ -552,6 +555,33 @@ function whenUnitClicked(stateObj, unit) {
             });
         }
     });
+}
+
+function renderArmySelectionScreen(stateObj) {
+    const appDiv = document.getElementById('app');
+    appDiv.innerHTML = '';
+
+    const pointsDiv = document.createElement('div');
+    pointsDiv.id = 'points-tracker';
+    pointsDiv.className = 'points-tracker';
+    pointsDiv.textContent = `Points: ${stateObj.selectedArmyPoints}/${stateObj.maxArmyPoints}`;
+    appDiv.appendChild(pointsDiv);
+
+    const unitSelectionDiv = document.createElement('div');
+    unitSelectionDiv.className = 'unit-selection-container';
+
+    const unitClasses = [BasicWarrior, Samurai, closeUpWarrior, minigunWarrior, speederBike, stunner, explosive, Lieutenant];
+
+    unitClasses.forEach(UnitClass => {
+        const unit = new UnitClass(true);
+        const unitDiv = createUnitSelectionDiv(unit, stateObj);
+        unitSelectionDiv.appendChild(unitDiv);
+    });
+
+    appDiv.appendChild(unitSelectionDiv);
+
+    const startGameButton = createStartGameButton(stateObj);
+    appDiv.appendChild(startGameButton);
 }
 
 function findTargetForAttack(stateObj, enemy) {
