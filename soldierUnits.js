@@ -23,8 +23,9 @@ class BasicWarrior {
                 range: 4,
                 accuracyModifier: 0.15,
                 damage: 2,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj;
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage. Medium accuracy. Long range"
@@ -37,9 +38,10 @@ class BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 1,
                 mark: 1,
-                execute: (stateObj, targetIndex, attack) => {
-                    stateObj = applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage. Apply " + this.attacks[i].mark + ".  High accuracy. Long range"
@@ -70,8 +72,9 @@ class Shotgunner extends BasicWarrior {
                 range: 4,
                 accuracyModifier: 0.1,
                 damage: 1,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  High accuracy. Medium range"
@@ -83,8 +86,9 @@ class Shotgunner extends BasicWarrior {
                 range: 3,
                 accuracyModifier: 0.25,
                 damage: 4,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  Low accuracy. Close range"
@@ -117,8 +121,9 @@ class minigunWarrior extends BasicWarrior {
                 range: 6,
                 damage: 0,
                 mark: 1,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Apply " + this.attacks[i].mark + " mark.  Perfect accuracy. Long range"
@@ -130,8 +135,9 @@ class minigunWarrior extends BasicWarrior {
                 range: 5,
                 accuracyModifier: 0.15,
                 damage: 3,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  Medium accuracy. Long range"
@@ -162,8 +168,9 @@ class speederBike extends BasicWarrior {
                 range: 4,
                 accuracyModifier: 0.2,
                 damage: 5,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  Medium-low accuracy. Medium range"
@@ -175,8 +182,9 @@ class speederBike extends BasicWarrior {
                 range: 1,
                 accuracyModifier: 0.15,
                 damage: 6,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  High accuracy. Must be adjacent"
@@ -210,7 +218,8 @@ class stunner extends BasicWarrior {
                 damage: 1,
                 execute: async (stateObj, targetIndex, attack) => {
                     stateObj = await applyStun(stateObj, targetIndex, attack.stun, this.isPlayerOwned)
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage. Lower target accuracy by " + this.attacks[i].stun + ". Very High accuracy. Medium range"
@@ -226,8 +235,9 @@ class stunner extends BasicWarrior {
                 mark: 2,
                 execute: async (stateObj, targetIndex, attack) => {
                     stateObj = await applyStun(stateObj, targetIndex, attack.stun, this.isPlayerOwned)
-                    stateObj = applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage. Lower accuracy by " + this.attacks[i].stun + ".  Apply " + this.attacks[i].mark + " mark. Must be adjacent"
@@ -259,9 +269,10 @@ class explosive extends BasicWarrior {
                 radius: 2,
                 damage: 2,
                 explosive: true,
-                execute: (stateObj, targetIndex, attack) => {
+                execute: async (stateObj, targetIndex, attack) => {
                     console.log("targeting unit " + targetIndex)
-                    return applyAOEdamage(stateObj, targetIndex, attack, this.playerOwned);
+                    stateObj = await applyAOEdamage(stateObj, targetIndex, attack, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage within " + this.attacks[i].radius + " squares. Perfect accuracy. Medium range"
@@ -273,8 +284,9 @@ class explosive extends BasicWarrior {
                 range: 3,
                 accuracyModifier: 0.1,
                 damage: 2,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  High accuracy. Close range"
@@ -323,8 +335,9 @@ class Lieutenant extends BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 4,
                 buff: false,
-                execute: (stateObj, targetIndex, attack) => {
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  Perfect accuracy. Must be adjacent"

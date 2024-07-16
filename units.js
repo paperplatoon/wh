@@ -21,10 +21,11 @@ class Samurai extends BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 1,
                 mark: -2,
-                execute: (stateObj, targetIndex, attack) => {
+                execute: async (stateObj, targetIndex, attack) => {
                     const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
-                    stateObj = applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  Increase evasiveness by + " + (-this.attacks[i].mark) + ". High accuracy. Medium range"
@@ -37,10 +38,10 @@ class Samurai extends BasicWarrior {
                 accuracyModifier: 0.05,
                 damage: 2,
                 mark: -1,
-                execute: (stateObj, targetIndex, attack) => {
+                execute: async (stateObj, targetIndex, attack) => {
                     const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
-                    stateObj = applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
-                    stateObj = applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
                 text: (i) => {
@@ -73,10 +74,11 @@ class katana extends BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 1,
                 mark: -2,
-                execute: (stateObj, targetIndex, attack) => {
+                execute: async (stateObj, targetIndex, attack) => {
                     const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
-                    stateObj = applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
-                    return applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    return stateObj
                 },
                 text: (i) => {
                     let textString = "Deal " + this.attacks[i].damage + " damage.  Increase evasiveness by + " + (-this.attacks[i].mark) + ". High accuracy. Medium range"
@@ -89,10 +91,10 @@ class katana extends BasicWarrior {
                 accuracyModifier: 0.05,
                 damage: 2,
                 mark: -1,
-                execute: (stateObj, targetIndex, attack) => {
+                execute: async (stateObj, targetIndex, attack) => {
                     const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
-                    stateObj = applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
-                    stateObj = applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
                 text: (i) => {

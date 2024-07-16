@@ -12,7 +12,7 @@ function canBuffUnit(stateObj, index) {
 
 async function executeEnemyAttack(stateObj, attacker, target, attack) {
     const targetIndex = stateObj.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
-    stateObj = attack.execute(stateObj, targetIndex, attack);
+    stateObj = await attack.execute(stateObj, targetIndex, attack);
     return immer.produce(stateObj, draft => {
         
         if (targetIndex === -1) return;
@@ -25,22 +25,23 @@ async function executeEnemyAttack(stateObj, attacker, target, attack) {
     });
 }
 
-function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlayer) {
-    return immer.produce(stateObj, draft => {
-        const targetUnit = (isPlayer) ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
-        const attackerUnit = (isPlayer) ? stateObj.playerArmy[stateObj.selectedUnitIndex] : draft.opponentArmy.find(unit => unit.currentSquare === attackerSquare);
+async function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlayer) {
+    return immer.produce(stateObj, async draft => {
+        const targetUnit = isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
+        const attackerUnit = isPlayer ? draft.playerArmy.find(unit => unit.currentSquare === attackerSquare) : draft.opponentArmy.find(unit => unit.currentSquare === attackerSquare);
+        
         if (targetUnit) {
             const distance = chebyshevDistance(attackerSquare, targetUnit.currentSquare);
             const hitRoll = Math.random();
-            const markBuff = targetUnit.mark * 0.1; // Calculate mark penalty
+            const markBuff = targetUnit.mark * 0.1;
             const stunnedPenalty = attackerUnit.accuracy * 0.1;
-            const distanceModifier = ((distance - 1) * attack.accuracyModifier)
-            const threshold =  distanceModifier + stunnedPenalty - markBuff; 
+            const distanceModifier = ((distance - 1) * attack.accuracyModifier);
+            const threshold = distanceModifier + stunnedPenalty - markBuff;
+            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
+            
             if (hitRoll > threshold) {
-                console.log(attackerUnit.name + " hits with " + attack.name + "! Needed to beat " + Math.round(threshold*100)/100 + " and rolled a " + Math.round(hitRoll*100)/100);
                 targetUnit.health -= attack.damage;
-            } else {
-                console.log(attackerUnit.name + " misses with " + attack.name + "! Needed to beat " + Math.round(threshold*100)/100 + " but rolled a " + Math.round(hitRoll*100)/100);
+                // await animateDamage(targetUnit, attack.damage);
             }
         }
     });
@@ -48,24 +49,39 @@ function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlayer) {
 
 
 async function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
-    centerIndex = (isPlayer) ? stateObj.opponentArmy[targetIndex].currentSquare : stateObj.playerArmy[targetIndex].currentSquare
-    return immer.produce(stateObj, draft => {
-        const affectedSquares = getSquaresInRadius(centerIndex, attack.radius, draft.gridSize);
-        console.log("hits" + affectedSquares)
-        affectedSquares.forEach(square => {
-            const targetUnit = draft.grid[square];
-            if (targetUnit !== 0) {
-                let targetIndex = draft.playerArmy.findIndex(unit => unit.currentSquare === square);
+    const targetArmy = isPlayer ? stateObj.opponentArmy : stateObj.playerArmy;
+    if (targetIndex < 0 || targetIndex >= targetArmy.length) {
+        console.error("Invalid target index in applyAOEdamage");
+        return stateObj;
+    }
+    
+    const centerSquare = targetArmy[targetIndex].currentSquare;
+    if (centerSquare === undefined) {
+        console.error("Target unit has no currentSquare");
+        return stateObj;
+    }
+
+    return immer.produce(stateObj, async draft => {
+        const affectedSquares = getSquaresInRadius(centerSquare, attack.radius, draft.gridSize);
+        console.log("hits", affectedSquares);
+        
+        for (const square of affectedSquares) {
+            if (draft.grid[square] !== 0) {
+                let targetUnit = draft.playerArmy.find(unit => unit.currentSquare === square);
                 let targetArmy = draft.playerArmy;
-                if (targetIndex === -1) {
-                    targetIndex = draft.opponentArmy.findIndex(unit => unit.currentSquare === square);
+                
+                if (!targetUnit) {
+                    targetUnit = draft.opponentArmy.find(unit => unit.currentSquare === square);
                     targetArmy = draft.opponentArmy;
                 }
-                if (targetIndex !== -1) {
-                    targetArmy[targetIndex].health -= attack.damage;
+                
+                if (targetUnit) {
+                    targetUnit.health -= attack.damage;
+                    // You could add an animation here
+                    // await animateAOEDamage(targetUnit, attack.damage);
                 }
             }
-        });
+        }
     });
 }
 
@@ -102,17 +118,19 @@ async function executeBuffAttack(stateObj, attackIndex, targetIndex) {
     return stateObj
 }
 
-function applyMark(stateObj, targetIndex, amount, isPlayer) {
-    return immer.produce(stateObj, draft => {
-        const targetUnit = (isPlayer) ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex]
+async function applyMark(stateObj, targetIndex, amount, isPlayer) {
+    return immer.produce(stateObj, async draft => {
+        const targetUnit = isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
         if (targetUnit) {
             targetUnit.mark += amount;
+            // Here you can add an animation function
+            // await animateMark(targetUnit, amount);
         }
     });
 }
 
 async function applyStun(stateObj, targetIndex, amount, isPlayer) {
-    return immer.produce(stateObj, draft => {
+    return immer.produce(stateObj, async draft => {
         const targetUnit = !isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
         if (targetUnit) {
             targetUnit.accuracy += amount;

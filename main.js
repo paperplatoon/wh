@@ -23,14 +23,14 @@ let state = {
     selectedArmy: [],
 };
 
-function handleEndTurn(stateObj) {
-    stateObj = immer.produce(stateObj, draft => {
+async function handleEndTurn(stateObj) {
+    stateObj =  immer.produce(stateObj, draft => {
         resetUnitTurnStatus(draft.playerArmy);
         resetUnitTurnStatus(draft.opponentArmy);
         draft.turnCounter++;
-        setBackToNormal(draft)
+        setBackToNormal(draft);
     });
-    return EnemiesMove(stateObj);
+    return await EnemiesMove(stateObj);
 }
 
 
@@ -109,8 +109,8 @@ async function renderGlowingSquares(stateObj) {
             cellDiv.classList.add('glow-green');
         }
         
-        cellDiv.addEventListener('click', () => {
-            stateObj = handleMoveToSquare(stateObj, index);
+        cellDiv.addEventListener('click', async () => {
+            stateObj = await handleMoveToSquare(stateObj, index);
             if (stateObj.showAttackPopup) {
                 renderAttackPopup(stateObj);
             }
@@ -157,9 +157,11 @@ async function renderAttackPopup(stateObj) {
     for (let i=0; i < stateObj.attackOptions.length; i++ ) {
         let attack = stateObj.attackOptions[i]
         if ( (stateObj.targetEnemyIndex !== null && !attack.buff) || (stateObj.targetAllyIndex !== null && attack.buff) ) {
-            const attackButton = createAttackButton(stateObj, attack);
+            console.log("creating buttons and targ enemy index is " + stateObj.targetEnemyIndex)
+            let attackButton = createAttackButton(stateObj, attack);
             attackButton.onclick = async () => {
-                    stateObj = handleAttackButtonClick(stateObj, i);
+                console.log("clicking buttons and targ enemy index is " + stateObj.targetEnemyIndex)
+                    stateObj = await handleAttackButtonClick(stateObj, i);
             };
             popup.appendChild(attackButton);
         } 
@@ -192,8 +194,10 @@ function handleCellClick(stateObj, index) {
 
 async function handleAttackButtonClick(stateObj, attackOptionsIndex) {
     const selectedUnit = stateObj.playerArmy[stateObj.selectedUnitIndex];
-    const targetIndex = (stateObj.targetEnemyIndex) ? stateObj.targetEnemyIndex : stateObj.targetAllyIndex
+    const targetIndex = (stateObj.targetEnemyIndex !== null) ? stateObj.targetEnemyIndex : stateObj.targetAllyIndex
     const attackIndex = selectedUnit.attacks.indexOf(stateObj.attackOptions[attackOptionsIndex])
+
+    console.log('target index is ' + targetIndex)
 
     stateObj = await executeAttack(stateObj, attackIndex, targetIndex);
     stateObj = setBackToNormal(stateObj);
@@ -201,10 +205,10 @@ async function handleAttackButtonClick(stateObj, attackOptionsIndex) {
     return stateObj
 }
 
-function handleMoveToSquare(stateObj, index) {
+async function handleMoveToSquare(stateObj, index) {
 
     if (canMoveToSquare(stateObj, index)) {
-        stateObj = moveUnitToSquare(stateObj, index);
+        stateObj = await moveUnitToSquare(stateObj, index);
         stateObj = clearSelectionAndGlowingSquares(stateObj)
     } else if (canAttackSquare(stateObj, index)) {
         stateObj = prepareAttack(stateObj, index, true);
@@ -223,15 +227,18 @@ function canMoveToSquare(stateObj, index) {
            !stateObj.playerArmy[stateObj.selectedUnitIndex].unitMovedThisTurn;
 }
 
-function moveUnitToSquare(stateObj, index) {
-    return immer.produce(stateObj, draft => {
+async function moveUnitToSquare(stateObj, index) {
+    return immer.produce(stateObj, async draft => {
         const selectedUnit = draft.playerArmy[draft.selectedUnitIndex];
-        draft.grid[selectedUnit.currentSquare] = 0;
+        const oldSquare = selectedUnit.currentSquare;
+        draft.grid[oldSquare] = 0;
         selectedUnit.currentSquare = index;
         draft.grid[index] = selectedUnit.color;
         selectedUnit.unitMovedThisTurn = true;
         draft.selectedUnitIndex = null;
         draft.currentScreen = "normalScreen";
+        // You could add an animation here
+        // await animateMove(selectedUnit, oldSquare, index);
     });
 }
 
@@ -247,6 +254,8 @@ function prepareAttack(stateObj, index, targetingEnemy) {
     return immer.produce(stateObj, draft => {
         const selectedUnit = draft.playerArmy[draft.selectedUnitIndex];
         const enemyUnit = (targetingEnemy) ? draft.opponentArmy.find(unit => unit.currentSquare === index) : draft.playerArmy.find(unit => unit.currentSquare === index)
+        console.log("enenym unit is " + JSON.stringify(enemyUnit))
+        console.log("enenym unit index is  " + draft.opponentArmy.indexOf(enemyUnit))
         draft.showAttackPopup = true;
         draft.attackPopupPosition = index;
         draft.attackOptions = getValidAttacks(selectedUnit, index);
@@ -297,17 +306,22 @@ function renderScreen(stateObj) {
     }
 }
 
-function moveEnemyUnit(draft, enemy) {
-    const movements = {
-      "towardsClosestEnemy": moveTowardsClosestPlayer,
-      "awayFromEnemy": moveAwayFromAllPlayers,
-      "awayFromAll": moveAwayFromAllUnits,
-      "moveTowardsFellows": moveTowardsClosestFellow,
-      "moveTowardsLeader": moveTowardsLeader,
-    };
-  
-    const movement = movements[enemy.movement];
-    movement(draft, enemy);
+async function moveEnemyUnit(stateObj, enemy) {
+    return immer.produce(stateObj, async draft => {
+        const currentEnemy = draft.opponentArmy.find(e => e.id === enemy.id);
+        const movements = {
+            "towardsClosestEnemy": moveTowardsClosestPlayer,
+            "awayFromEnemy": moveAwayFromAllPlayers,
+            "awayFromAll": moveAwayFromAllUnits,
+            "moveTowardsFellows": moveTowardsClosestFellow,
+            "moveTowardsLeader": moveTowardsLeader,
+        };
+        
+        const movement = movements[currentEnemy.movement];
+        await movement(draft, currentEnemy);
+        // Here you can add an animation function
+        // await animateMove(currentEnemy, oldPosition, newPosition);
+    });
 }
 
 function checkForDeath(stateObj) {
@@ -348,15 +362,15 @@ updateState(state)
 
 
 
-function EnemiesMove(stateObj) {
-    return stateObj.opponentArmy.reduce((accState, enemy) => {
-        let newState = moveEnemy(accState, enemy);
-        newState = enemyAttack(newState, enemy);
-        return updateState(newState);
-    }, stateObj);
+async function EnemiesMove(stateObj) {
+    for (const enemy of stateObj.opponentArmy) {
+        stateObj = await moveEnemy(stateObj, enemy);
+        stateObj = await enemyAttack(stateObj, enemy);
+        stateObj = updateState(stateObj);
+    }
+    return stateObj;
 }
-
-function moveEnemy(stateObj, enemy) {
+async function moveEnemy(stateObj, enemy) {
     return immer.produce(stateObj, draft => {
         const currentEnemy = draft.opponentArmy.find(e => e.id === enemy.id);
         moveEnemyUnit(draft, currentEnemy)
@@ -364,15 +378,14 @@ function moveEnemy(stateObj, enemy) {
     });
 }
 
-function enemyAttack(stateObj, enemy) {
-    return immer.produce(stateObj, draft => {
-        const currentEnemy = draft.opponentArmy.find(e => e.id === enemy.id);
-        const attackInfo = findTargetForAttack(draft, currentEnemy);
-        if (attackInfo) {
-            executeEnemyAttack(draft, currentEnemy, attackInfo.target, attackInfo.attack);
-        }
-        updateGrid(draft);
-    });
+async function enemyAttack(stateObj, enemy) {
+    const currentEnemy = stateObj.opponentArmy.find(e => e.id === enemy.id);
+    const attackInfo = findTargetForAttack(stateObj, currentEnemy);
+    if (attackInfo) {
+        stateObj = await executeEnemyAttack(stateObj, currentEnemy, attackInfo.target, attackInfo.attack);
+    }
+    updateGrid(stateObj)
+    return stateObj
 }
 
 
