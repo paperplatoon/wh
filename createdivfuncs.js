@@ -164,3 +164,27 @@ function createStartGameButton(stateObj) {
 
     return startButton;
 }
+
+function animateAttack(targetSquare) {
+    const cellElement = document.querySelector(`.grid-cell:nth-child(${targetSquare + 1})`);
+    const circle = document.createElement('div');
+    circle.className = 'attack-animation';
+    circle.style.cssText = `
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        opacity: 0;
+        animation: flash 0.1s ease-out;
+        z-index: 1000;
+    `;
+    cellElement.appendChild(circle);
+    setTimeout(() => circle.remove(), 500);
+}
+
+function animateDamage(targetSquare) {
+    const cellElement = document.querySelector(`.grid-cell:nth-child(${targetSquare + 1})`);
+    cellElement.classList.add('damage-animation');
+    setTimeout(() => cellElement.classList.remove('damage-animation'), 500);
+}

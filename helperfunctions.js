@@ -42,6 +42,10 @@ async function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlay
             if (hitRoll > threshold) {
                 targetUnit.health -= attack.damage;
                 // await animateDamage(targetUnit, attack.damage);
+
+                animateDamage(targetUnit.currentSquare);
+                // Wait for the damage animation to complete
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
         }
     });
@@ -100,6 +104,12 @@ async function executeAttack(stateObj, attackIndex, targetIndex) {
     stateObj = immer.produce(stateObj, draft => {
         draft.playerArmy[draft.selectedUnitIndex].unitAttackedThisTurn = true;
     });
+
+    const targetSquare = stateObj.playerArmy[stateObj.selectedUnitIndex].currentSquare;
+    animateAttack(targetSquare);
+
+    // Wait for the attack animation to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     stateObj = await attack.execute(stateObj, targetIndex, attack);
     return stateObj
