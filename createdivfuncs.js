@@ -134,13 +134,11 @@ function createUnitSelectionDiv(unit, stateObj) {
     unitDiv.className = 'unit-selection';
     
     const avatar = createImageAvatar(unit);
-    const nameDiv = document.createElement('div');
-    nameDiv.textContent = unit.name;
     const pointsDiv = document.createElement('div');
+    pointsDiv.className = 'points-div';
     pointsDiv.textContent = `Points: ${unit.points}`;
 
     unitDiv.appendChild(avatar);
-    unitDiv.appendChild(nameDiv);
     unitDiv.appendChild(pointsDiv);
 
     unitDiv.addEventListener('click', () => {
@@ -151,20 +149,6 @@ function createUnitSelectionDiv(unit, stateObj) {
     });
 
     return unitDiv;
-}
-
-function createStartGameButton(stateObj) {
-    const startButton = document.createElement('button');
-    startButton.textContent = 'Start Game';
-    startButton.className = 'bottom-button';
-    startButton.disabled = stateObj.selectedArmyPoints === 0;
-    
-    startButton.addEventListener('click', () => {
-        stateObj = startGame(stateObj);
-        updateState(stateObj);
-    });
-
-    return startButton;
 }
 
 function createStartGameButton(stateObj) {

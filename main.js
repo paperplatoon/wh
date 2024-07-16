@@ -4,7 +4,7 @@ let state = {
     currentScreen: "armySelectionScreen",
     playerTurn: true,
     turnCounter: 0,
-    playerArmy: [playerWarrior1, playerWarrior2, playerWarrior3, playerWarrior4],
+    playerArmy: [],
     opponentArmy: [opponentWarrior1, opponentWarrior2, opponentWarrior3, opponentWarrior4],
     movableSquares: [],
     attackRangeSquares: [],
@@ -564,13 +564,13 @@ function renderArmySelectionScreen(stateObj) {
     const pointsDiv = document.createElement('div');
     pointsDiv.id = 'points-tracker';
     pointsDiv.className = 'points-tracker';
-    pointsDiv.textContent = `Points: ${stateObj.selectedArmyPoints}/${stateObj.maxArmyPoints}`;
+    pointsDiv.textContent = `Total Points: ${stateObj.selectedArmyPoints}/${stateObj.maxArmyPoints}`;
     appDiv.appendChild(pointsDiv);
 
     const unitSelectionDiv = document.createElement('div');
     unitSelectionDiv.className = 'unit-selection-container';
 
-    const unitClasses = [BasicWarrior, Samurai, closeUpWarrior, minigunWarrior, speederBike, stunner, explosive, Lieutenant];
+    const unitClasses = [BasicWarrior, Samurai, Shotgunner, minigunWarrior, speederBike, stunner, explosive, Lieutenant];
 
     unitClasses.forEach(UnitClass => {
         const unit = new UnitClass(true);

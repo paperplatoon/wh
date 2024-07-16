@@ -26,6 +26,19 @@
     cursor: pointer;
 }
 
+.points-div {
+    background-color: rgba(75, 75, 75, 0.705);
+    color: white;
+    top: -6vh;
+    position: relative;
+    z-index: 2,
+}
+
+.unit-selection:hover .points-div {
+    background-color: rgba(134, 149, 246, 0.705);
+    color: rgb(1, 1, 1);
+}
+
 .attack-bottom-row-div {
     display: flex;
     flex-direction: row;
@@ -253,19 +266,21 @@
     font-size: 24px;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 20px;
+    color: rgb(141, 1, 1);
+    background-color: rgba(167, 167, 167, 0.68);
+    margin-bottom: 2vh;
 }
 
 .unit-selection-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 20px;
+    gap: 10px;
 }
 
 .unit-selection {
-    width: 120px;
-    padding: 10px;
+    width: 10vw;
+    padding: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
     text-align: center;
