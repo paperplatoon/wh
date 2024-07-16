@@ -2,8 +2,8 @@ function createEndTurnButton(stateObj) {
     const endTurnButton = document.createElement('button');
     endTurnButton.textContent = 'End Turn';
     endTurnButton.className = "bottom-button"
-    endTurnButton.addEventListener('click', () => {
-        stateObj = handleEndTurn(stateObj);
+    endTurnButton.addEventListener('click', async () => {
+        stateObj = await handleEndTurn(stateObj);
         updateState(stateObj);
     });
     const allUnitsDone = stateObj.playerArmy.every(unit => unit.unitAttackedThisTurn && unit.unitMovedThisTurn);
@@ -42,7 +42,7 @@ function createAttackButton(stateObj, attack) {
     const attackButton = document.createElement('button');
     const attackerUnit = stateObj.playerArmy[stateObj.selectedUnitIndex]
     let textString = attack.name
-    if (attack.accuracyModifier > 0 && stateObj.targetEnemyIndex) {
+    if (attack.accuracyModifier > 0 && stateObj.targetEnemyIndex !== null) {
         const distance = findTargetDistance(stateObj)
         const stunnedPenalty = attackerUnit.accuracy * 0.1;
         const markBuff = stateObj.opponentArmy[stateObj.targetEnemyIndex].mark * 0.1
@@ -165,26 +165,92 @@ function createStartGameButton(stateObj) {
     return startButton;
 }
 
-function animateAttack(targetSquare) {
-    const cellElement = document.querySelector(`.grid-cell:nth-child(${targetSquare + 1})`);
-    const circle = document.createElement('div');
-    circle.className = 'attack-animation';
-    circle.style.cssText = `
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        background-color: white;
-        border-radius: 50%;
-        opacity: 0;
-        animation: flash 0.1s ease-out;
-        z-index: 1000;
-    `;
-    cellElement.appendChild(circle);
-    setTimeout(() => circle.remove(), 500);
-}
+// function animateAttack(targetSquare) {
+//     const cellElement = document.querySelector(`.grid-cell:nth-child(${targetSquare + 1})`);
+//     const circle = document.createElement('div');
+//     circle.className = 'attack-animation';
+//     circle.style.cssText = `
+//         position: absolute;
+//         width: 20px;
+//         height: 20px;
+//         background-color: white;
+//         border-radius: 50%;
+//         opacity: 0;
+//         animation: flash 0.1s ease-out;
+//         z-index: 1000;
+//     `;
+//     cellElement.appendChild(circle);
+//     setTimeout(() => circle.remove(), 500);
+// }
 
-function animateDamage(targetSquare) {
-    const cellElement = document.querySelector(`.grid-cell:nth-child(${targetSquare + 1})`);
-    cellElement.classList.add('damage-animation');
-    setTimeout(() => cellElement.classList.remove('damage-animation'), 500);
+async function animateAttack(attackerSquare, targetSquare, hit, gridSize) {
+    const gridContainer = document.querySelector('.grid-container');
+    
+    // Calculate cell size
+    const cellWidth = 80 / gridSize;
+    const cellHeight = 80 / gridSize;
+
+    // Calculate attacker and target positions
+    const attackerRow = Math.floor(attackerSquare / gridSize);
+    const attackerCol = attackerSquare % gridSize;
+    const targetRow = Math.floor(targetSquare / gridSize);
+    const targetCol = targetSquare % gridSize;
+
+    // Calculate center points
+    const attackerX = 10 + (attackerCol + 0.5) * cellWidth;
+    const attackerY = (attackerRow + 0.5) * cellHeight;
+    const targetX = 10 + (targetCol + 0.5) * cellWidth;
+    const targetY = (targetRow + 0.5) * cellHeight;
+
+    // Calculate distance and angle
+    const dx = targetX - attackerX;
+    const dy = targetY - attackerY;
+    const distance = Math.sqrt(dx*dx + dy*dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    // Create laser beam
+    const laser = document.createElement('div');
+    laser.className = 'laser-beam';
+    
+    laser.style.left = `${attackerX}vw`;
+    laser.style.top = `${attackerY}vh`;
+    laser.style.width = `3vw`;
+    laser.style.transform = `rotate(${angle}deg)`;
+
+    gridContainer.appendChild(laser);
+
+    // Animate laser
+    laser.animate([
+        { transform: `rotate(${angle}deg) translateX(0)` },
+        { transform: `rotate(${angle}deg) translateX(${hit ? distance/1.3 : distance}vw)` }
+    ], {
+        duration: 300,
+        easing: 'linear'
+    });
+
+    // Wait for animations to complete
+    await new Promise(resolve => setTimeout(resolve, 300));
+    laser.remove();
+
+    // Animate hit or miss
+    const targetCell = document.querySelector(`.grid-cell:nth-child(${targetSquare + 1})`);
+    const avatar = targetCell.querySelector('img');
+    if (hit && avatar) {
+        console.log('applying glow red')
+        avatar.classList.add('taking-damage');
+        targetCell.classList.add('flash')
+    } else if (avatar) {
+        console.log('applying duck')
+        avatar.classList.add('duck');
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+
+    // Clean up
+    
+    targetCell.classList.remove('flash-orange', 'flash');
+    if (avatar) {
+        avatar.classList.remove('glow-red', 'duck');
+    }
 }

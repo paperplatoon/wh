@@ -128,7 +128,7 @@ function calculatePopupPosition(index) {
     const row = Math.floor(index / state.gridSize) - 1;
     const col = index % state.gridSize - 1;
 
-    let insertSize = (state.attackOptions.attack1 && state.attackOptions.attack2) ? ((80/state.gridSize)/2) : ((80/state.gridSize)) 
+    let insertSize = (state.attackOptions.length > 1 ) ? ((80/state.gridSize)/2) : ((80/state.gridSize)) 
 
     const locationX = 10 + insertSize + (col * (80/state.gridSize));
     let locationY = ((80/state.gridSize)/2) + (row * (80/state.gridSize));
@@ -254,8 +254,6 @@ function prepareAttack(stateObj, index, targetingEnemy) {
     return immer.produce(stateObj, draft => {
         const selectedUnit = draft.playerArmy[draft.selectedUnitIndex];
         const enemyUnit = (targetingEnemy) ? draft.opponentArmy.find(unit => unit.currentSquare === index) : draft.playerArmy.find(unit => unit.currentSquare === index)
-        console.log("enenym unit is " + JSON.stringify(enemyUnit))
-        console.log("enenym unit index is  " + draft.opponentArmy.indexOf(enemyUnit))
         draft.showAttackPopup = true;
         draft.attackPopupPosition = index;
         draft.attackOptions = getValidAttacks(selectedUnit, index);
@@ -363,13 +361,20 @@ updateState(state)
 
 
 async function EnemiesMove(stateObj) {
-    for (const enemy of stateObj.opponentArmy) {
+    for (let i = 0; i < stateObj.opponentArmy.length; i++) {
+        const enemy = stateObj.opponentArmy[i];
         stateObj = await moveEnemy(stateObj, enemy);
+        stateObj = updateState(stateObj);
+        
         stateObj = await enemyAttack(stateObj, enemy);
         stateObj = updateState(stateObj);
+        
+        // If you want to pause briefly between each enemy's actions:
+        await new Promise(resolve => setTimeout(resolve, 300)); // 500ms delay
     }
     return stateObj;
 }
+
 async function moveEnemy(stateObj, enemy) {
     return immer.produce(stateObj, draft => {
         const currentEnemy = draft.opponentArmy.find(e => e.id === enemy.id);
@@ -382,10 +387,27 @@ async function enemyAttack(stateObj, enemy) {
     const currentEnemy = stateObj.opponentArmy.find(e => e.id === enemy.id);
     const attackInfo = findTargetForAttack(stateObj, currentEnemy);
     if (attackInfo) {
-        stateObj = await executeEnemyAttack(stateObj, currentEnemy, attackInfo.target, attackInfo.attack);
+        const attackerSquare = currentEnemy.currentSquare;
+        const targetSquare = attackInfo.target.currentSquare;
+
+        // Determine if the attack hits
+        const distance = chebyshevDistance(attackerSquare, targetSquare);
+        const hitRoll = Math.random();
+        const markBuff = attackInfo.target.mark * 0.1;
+        const stunnedPenalty = currentEnemy.accuracy * 0.1;
+        const distanceModifier = ((distance - 1) * attackInfo.attack.accuracyModifier);
+        const threshold = distanceModifier + stunnedPenalty - markBuff;
+        const hit = hitRoll > threshold;
+
+        // Animate the attack
+        await animateAttack(attackerSquare, targetSquare, hit, stateObj.gridSize);
+
+        if (hit) {
+            stateObj = await executeEnemyAttack(stateObj, currentEnemy, attackInfo.target, attackInfo.attack);
+        }
     }
-    updateGrid(stateObj)
-    return stateObj
+    updateGrid(stateObj);
+    return stateObj;
 }
 
 

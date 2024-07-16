@@ -291,10 +291,13 @@
     background-color: #f0f0f0;
 }
 
+.flash {
+    animation: flash 0.3s;
+}
+
 @keyframes flash {
-    0% { opacity: 0; }
-    50% { opacity: 1; }
-    100% { opacity: 0; }
+    0%, 100% { background-color: black; }
+    50% { background-color: white; }
 }
 
 .damage-animation {
@@ -306,3 +309,29 @@
     50% { background-color: white }
     100% { background-color: black }
 }
+.laser-beam {
+    position: absolute;
+    height: 0.25vh;
+    background-color: red;
+    transform-origin: left center;
+}
+
+.taking-damage {
+    animation: takingDamage 0.3s;
+}
+
+@keyframes takingDamage {
+    0%, 100% { filter: drop-shadow(0 0 0 rgb(0, 0, 0)); }
+    50% { filter: drop-shadow(0 0 5px rgb(0, 0, 0));
+        filter: brightness(0) saturate(100%) invert(24%) sepia(86%) saturate(7483%) hue-rotate(358deg) brightness(107%) contrast(118%); }
+}
+
+.duck {
+    animation: duck 0.3s;
+}
+
+@keyframes duck {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-20px); }
+}
+

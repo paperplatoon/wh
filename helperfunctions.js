@@ -1,6 +1,6 @@
 function findTargetDistance(stateObj) {
     const selectedUnit = stateObj.playerArmy[stateObj.selectedUnitIndex];
-    const enemyUnit = (stateObj.targetEnemyIndex) ? stateObj.opponentArmy[stateObj.targetEnemyIndex] : stateObj.playerArmy[stateObj.targetAllyIndex]
+    const enemyUnit = (stateObj.targetEnemyIndex !== null) ? stateObj.opponentArmy[stateObj.targetEnemyIndex] : stateObj.playerArmy[stateObj.targetAllyIndex]
     const distance = chebyshevDistance(selectedUnit.currentSquare, enemyUnit.currentSquare)
     return distance
 }
@@ -29,25 +29,9 @@ async function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlay
     return immer.produce(stateObj, async draft => {
         const targetUnit = isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
         const attackerUnit = isPlayer ? draft.playerArmy.find(unit => unit.currentSquare === attackerSquare) : draft.opponentArmy.find(unit => unit.currentSquare === attackerSquare);
-        
-        if (targetUnit) {
-            const distance = chebyshevDistance(attackerSquare, targetUnit.currentSquare);
-            const hitRoll = Math.random();
-            const markBuff = targetUnit.mark * 0.1;
-            const stunnedPenalty = attackerUnit.accuracy * 0.1;
-            const distanceModifier = ((distance - 1) * attack.accuracyModifier);
-            const threshold = distanceModifier + stunnedPenalty - markBuff;
-            console.log("hitroll is " + Math.round(hitRoll*100)/100 + " and threshold is " + Math.round(threshold*100)/100);
-            
-            if (hitRoll > threshold) {
-                targetUnit.health -= attack.damage;
-                // await animateDamage(targetUnit, attack.damage);
+        targetUnit.health -= attack.damage;
 
-                animateDamage(targetUnit.currentSquare);
-                // Wait for the damage animation to complete
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-        }
+        await new Promise(resolve => setTimeout(resolve, 500));
     });
 }
 
@@ -96,8 +80,8 @@ function resetUnitTurnStatus(units) {
     });
 }
 
+//Need to modify attacks to FIGURE OUT WHAT HAPPENS IF THEY DON"T HIT
 async function executeAttack(stateObj, attackIndex, targetIndex) {
-    
     const attack = stateObj.playerArmy[stateObj.selectedUnitIndex].attacks[attackIndex];
     if (!attack) return stateObj;
 
@@ -105,14 +89,26 @@ async function executeAttack(stateObj, attackIndex, targetIndex) {
         draft.playerArmy[draft.selectedUnitIndex].unitAttackedThisTurn = true;
     });
 
-    const targetSquare = stateObj.playerArmy[stateObj.selectedUnitIndex].currentSquare;
-    animateAttack(targetSquare);
+    const attackerSquare = stateObj.playerArmy[stateObj.selectedUnitIndex].currentSquare;
+    const targetSquare = stateObj.opponentArmy[targetIndex].currentSquare;
 
-    // Wait for the attack animation to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Determine if the attack hits
+    const distance = chebyshevDistance(attackerSquare, targetSquare);
+    const hitRoll = Math.random();
+    const markBuff = stateObj.opponentArmy[targetIndex].mark * 0.1;
+    const stunnedPenalty = stateObj.playerArmy[stateObj.selectedUnitIndex].accuracy * 0.1;
+    const distanceModifier = ((distance - 1) * attack.accuracyModifier);
+    const threshold = distanceModifier + stunnedPenalty - markBuff;
+    const hit = hitRoll > threshold;
 
-    stateObj = await attack.execute(stateObj, targetIndex, attack);
-    return stateObj
+    // Animate the attack
+    await animateAttack(attackerSquare, targetSquare, hit, stateObj.gridSize);
+
+    if (hit) {
+        stateObj = await attack.execute(stateObj, targetIndex, attack);
+    }
+
+    return stateObj;
 }
 
 async function executeBuffAttack(stateObj, attackIndex, targetIndex) {
