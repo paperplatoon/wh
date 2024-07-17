@@ -97,13 +97,51 @@ function createAttackDivs(unit) {
 
         const attackTextDiv = document.createElement('div');
         attackTextDiv.classList.add('attack-text-div')
-        attackTextDiv.textContent = unit.attacks[i].text(i)
+        attackTextDiv.textContent = unit.attacks[i].text()
         
         attackDiv.append(attackNameDiv, attackTextDiv)
         rowDiv.append(attackDiv)
     }
-
     return rowDiv
+}
+
+function createUnitAttackDivs(stateObj, swappable=false) {
+    const container = document.createElement('div');
+    container.className = 'unit-attack-container';
+  
+    stateObj.playerArmy.forEach((unit, unitIndex) => {
+      const unitDiv = document.createElement('div');
+      unitDiv.className = 'unit-div';
+
+      const unitName = document.createElement('div');
+      unitName.innerHTML = `<h3>${unit.name}</h3>`;
+      unitDiv.append(unitName)
+
+      const avatar = createImageAvatar(unit);
+      unitDiv.append(avatar)
+  
+      unit.attacks.forEach((attack, attackIndex) => {
+        let attackDiv = createAttackDiv(attack, attackIndex)
+        if (swappable) {
+            attackDiv.addEventListener('click', () => handleAttackSelection(stateObj, unitIndex, attackIndex));
+        }
+        unitDiv.appendChild(attackDiv);
+      });
+  
+      container.appendChild(unitDiv);
+    });
+  
+    return container;
+}
+
+function createAttackDiv(attack, attackIndex=false) {
+    const attackDiv = document.createElement('div');
+    attackDiv.className = 'attack-div';
+    attackDiv.innerHTML = `
+      <h4>${attack.name}</h4>
+      <p>${attack.text()}</p>
+    `;
+    return attackDiv
 }
 
 function createGridCell(cell, index, stateObj) {

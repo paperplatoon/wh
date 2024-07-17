@@ -12,6 +12,11 @@
     flex-direction: column;
 }
 
+.unit-attack-container {
+    width: 10vw;
+    height: 20vh;
+}
+
 .bottom-button {
     width: 30vw;
     height: auto;

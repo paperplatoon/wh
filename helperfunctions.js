@@ -9,6 +9,11 @@ function canBuffUnit(stateObj, index) {
     return stateObj.buffableSquares.includes(index);
 }
 
+function selectRandomWeapon(weapons) {
+    const randomIndex = Math.floor(Math.random() * weapons.length);
+    return weapons[randomIndex];
+  }
+
 
 async function executeEnemyAttack(stateObj, attacker, target, attack) {
     const targetIndex = stateObj.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
@@ -34,6 +39,14 @@ async function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlay
 
         await new Promise(resolve => setTimeout(resolve, 500));
     });
+}
+
+function resetUnit(unit) {
+    const resetUnitObj = new unit.constructor(unit.playerOwned, unit.id, unit.color);
+    return {
+        ...resetUnitObj,
+        currentSquare: unit.currentSquare // Keep the current position
+    };
 }
 
 

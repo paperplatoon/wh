@@ -27,8 +27,8 @@ class Samurai extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: (i) => {
-                    let textString = "Deal " + this.attacks[i].damage + " damage.  Increase evasiveness by + " + (-this.attacks[i].mark) + ". High accuracy. Medium range"
+                text: () => {
+                    let textString = "Deal " + this.damage + " damage.  Increase evasiveness by + " + (-this.mark) + ". High accuracy. Medium range"
                     return textString
                 }
             },
@@ -44,8 +44,8 @@ class Samurai extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: (i) => {
-                    let textString = "Deal " + this.attacks[i].damage + " damage.  Increase evasiveness by + " + (-this.attacks[i].mark) + ". Very high accuracy. Medium range"
+                text: () => {
+                    let textString = "Deal " + this.damage + " damage.  Increase evasiveness by + " + (-this.mark) + ". Very high accuracy. Medium range"
                     return textString
                 }
             },
@@ -80,8 +80,8 @@ class katana extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: (i) => {
-                    let textString = "Deal " + this.attacks[i].damage + " damage.  Increase evasiveness by + " + (-this.attacks[i].mark) + ". High accuracy. Medium range"
+                text: () => {
+                    let textString = "Deal " + this.damage + " damage.  Increase evasiveness by + " + (-this.mark) + ". High accuracy. Medium range"
                     return textString
                 }
             },
@@ -97,8 +97,8 @@ class katana extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: (i) => {
-                    let textString = "Deal " + this.attacks[i].damage + " damage.  Increase evasiveness by + " + (-this.attacks[i].mark) + ". Very high accuracy. Medium range"
+                text: () => {
+                    let textString = "Deal " + this.damage + " damage.  Increase evasiveness by + " + (-this.mark) + ". Very high accuracy. Medium range"
                     return textString
                 }
             },
@@ -133,5 +133,36 @@ const opponentLocations = getRandomNumbersInRange(47, 63, 4)
 const opponentWarrior1 = new BasicWarrior(false, 4, "red",  opponentLocations[0]);
 const opponentWarrior2 = new BasicWarrior(false, 5, "red", opponentLocations[1]);
 const opponentWarrior3 = new Lieutenant(false, 6, "red", opponentLocations[2]);
-const opponentWarrior4 = new Samurai(false, 7, "red", opponentLocations[3]);
+const opponentWarrior4 = new BasicWarrior(false, 7, "red", opponentLocations[3]);
+
+let opponentArray = [opponentWarrior1, opponentWarrior2, opponentWarrior3, opponentWarrior4]
+opponentArray = [opponentWarrior1]
+
+const powerfulWeapons = [
+    {
+      name: "Plasma Cannon",
+      range: 5,
+      accuracyModifier: 0.05,
+      damage: 4,
+      execute: async (stateObj, targetIndex, attack) => {
+        stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+        return stateObj;
+      },
+      text: () => "Deal 4 damage. Very high accuracy. Long range"
+    },
+    {
+      name: "Railgun",
+      range: 6,
+      accuracyModifier: 0.1,
+      damage: 5,
+      execute: async (stateObj, targetIndex, attack) => {
+        stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+        return stateObj;
+      },
+      text: () => "Deal 5 damage. High accuracy. Very long range"
+    },
+    // Add more powerful weapons here
+  ];
+
+  
 

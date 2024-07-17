@@ -4,8 +4,9 @@ let state = {
     currentScreen: "armySelectionScreen",
     playerTurn: true,
     turnCounter: 0,
+    currentFloor: 0,
     playerArmy: [],
-    opponentArmy: [opponentWarrior1, opponentWarrior2, opponentWarrior3, opponentWarrior4],
+    opponentArmy: [...opponentArray],
     movableSquares: [],
     attackRangeSquares: [],
     buffableSquares: [],
@@ -21,6 +22,7 @@ let state = {
     selectedArmyPoints: 0,
     maxArmyPoints: 10, // Adjust this value as needed
     selectedArmy: [],
+    powerfulWeaponChoice: null,
 };
 
 async function handleEndTurn(stateObj) {
@@ -28,8 +30,8 @@ async function handleEndTurn(stateObj) {
         resetUnitTurnStatus(draft.playerArmy);
         resetUnitTurnStatus(draft.opponentArmy);
         draft.turnCounter++;
-        setBackToNormal(draft);
     });
+    stateObj = setBackToNormal(stateObj)
     return await EnemiesMove(stateObj);
 }
 
@@ -177,6 +179,59 @@ async function renderAttackPopup(stateObj) {
     document.body.appendChild(popup);
 }
 
+function handleAttackSelection(stateObj, unitIndex, attackIndex) {
+    const confirmationPopup = document.createElement('div');
+    confirmationPopup.className = 'confirmation-popup';
+    confirmationPopup.innerHTML = `
+      <p>Are you sure you want to swap this weapon with the found weapon?</p>
+      <button id="confirm-swap">Yes</button>
+      <button id="cancel-swap">Cancel</button>
+    `;
+  
+    document.body.appendChild(confirmationPopup);
+  
+    document.getElementById('confirm-swap').addEventListener('click', () => {
+      stateObj = swapAttack(stateObj, unitIndex, attackIndex);
+      confirmationPopup.remove();
+    });
+  
+    document.getElementById('cancel-swap').addEventListener('click', () => {
+      confirmationPopup.remove();
+    });
+  }
+
+  function swapAttack(stateObj, unitIndex, attackIndex) {
+    stateObj = immer.produce(stateObj, draft => {
+      draft.playerArmy[unitIndex].attacks[attackIndex] = stateObj.powerfulWeaponChoice;
+      draft.currentFloor++;
+      draft.powerfulWeaponChoice = null
+    });
+    return startNewFight(stateObj);
+  }
+
+  function startNewFight(stateObj) {
+    console.log("starting new fight")
+    stateObj = immer.produce(stateObj, draft => {
+      draft.opponentArmy = [...opponentArray];
+      draft.opponentArmy = opponentArray.map(unit => resetUnit(unit));
+      console.log(JSON.stringify(draft.opponentArmy))
+      draft.turnCounter = 0;
+      draft.playerTurn = true;
+      draft.currentScreen = "normalScreen"
+      draft.powerfulWeaponChoice = null;
+      draft.grid = new Array(draft.gridSize * draft.gridSize).fill(0);
+
+      const playerLocations = getRandomNumbersInRange(0, 16, draft.playerArmy.length)
+
+      draft.playerArmy.forEach((unit, unitIndex) => {
+        unit.currentSquare = playerLocations[unitIndex];
+    });
+
+    });
+    console.log('current screen ' + stateObj.currentScreen)
+    updateState(stateObj);
+  }
+
 function handleCellClick(stateObj, index) {
     const clickedUnit = stateObj.playerArmy.find(unit => unit.currentSquare === index);
     if (clickedUnit && (!clickedUnit.unitMovedThisTurn || !clickedUnit.unitAttackedThisTurn)) {
@@ -289,11 +344,27 @@ function setBackToNormal(stateObj) {
     });
 }
 
+function renderWeaponSelectionScreen(stateObj) {
+    const appDiv = document.getElementById('app');
+    appDiv.innerHTML = '';
+
+    const powerfulWeaponDiv = createAttackDiv(stateObj.powerfulWeaponChoice, attackIndex=false)
+
+    const title = document.createElement('h2');
+    title.textContent = 'Found ' + stateObj.powerfulWeaponChoice.name + '! Select a weapon to replace';
+    appDiv.appendChild(title);
+    appDiv.appendChild(powerfulWeaponDiv)
+  
+    const unitAttackDivs = createUnitAttackDivs(stateObj, swappable=true);
+    appDiv.appendChild(unitAttackDivs);
+  }
+
 function renderScreen(stateObj) {
     const screenRenderers = {
       "armySelectionScreen": renderArmySelectionScreen,
       "normalScreen": renderGrid,
-      "chooseSquareToMove": renderGlowingSquares
+      "chooseSquareToMove": renderGlowingSquares,
+      "weaponSelectionScreen": renderWeaponSelectionScreen,
     };
   
     const renderer = screenRenderers[stateObj.currentScreen];
@@ -323,7 +394,8 @@ async function moveEnemyUnit(stateObj, enemy) {
 }
 
 function checkForDeath(stateObj) {
-    return immer.produce(stateObj, draft => {
+
+    stateObj = immer.produce(stateObj, draft => {
         // Check player army
         for (let i = draft.playerArmy.length - 1; i >= 0; i--) {
             if (draft.playerArmy[i].health <= 0) {
@@ -341,14 +413,24 @@ function checkForDeath(stateObj) {
                 draft.opponentArmy.splice(i, 1);
             }
         }
+        if (draft.opponentArmy.length === 0) {
+            console.log("all opponents dead, moving to selectRandom")
+            draft.powerfulWeaponChoice = selectRandomWeapon(powerfulWeapons)
+            draft.currentScreen = "weaponSelectionScreen";
+          }
     });
+    
+    return stateObj
 }
 
   // Usage
 
 function updateState(stateObj) {
-    stateObj = checkForDeath(stateObj)
-    stateObj = updateGrid(stateObj)
+    console.log('stateObj.opponentArmy  ' + JSON.stringify(stateObj.opponentArmy) )
+    if (stateObj.currentScreen === "normalScreen") {
+        stateObj = checkForDeath(stateObj)
+        stateObj = updateGrid(stateObj)
+    }
     state = {...stateObj}
     renderScreen(stateObj)
     return state;
