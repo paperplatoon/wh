@@ -311,7 +311,8 @@
 }
 .laser-beam {
     position: absolute;
-    height: 0.25vh;
+    height: 0.45vh;
+    border: 0.5px dashed red;
     background-color: red;
     transform-origin: left center;
 }

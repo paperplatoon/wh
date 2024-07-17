@@ -12,6 +12,7 @@ function canBuffUnit(stateObj, index) {
 
 async function executeEnemyAttack(stateObj, attacker, target, attack) {
     const targetIndex = stateObj.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
+
     stateObj = await attack.execute(stateObj, targetIndex, attack);
     return immer.produce(stateObj, draft => {
         
@@ -48,10 +49,13 @@ async function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
         console.error("Target unit has no currentSquare");
         return stateObj;
     }
+    let targetCells = []
+    let avatars = []
 
-    return immer.produce(stateObj, async draft => {
+    stateObj = immer.produce(stateObj, draft => {
         const affectedSquares = getSquaresInRadius(centerSquare, attack.radius, draft.gridSize);
-        console.log("hits", affectedSquares);
+
+       
         
         for (const square of affectedSquares) {
             if (draft.grid[square] !== 0) {
@@ -64,6 +68,16 @@ async function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
                 }
                 
                 if (targetUnit) {
+                    const targetCell = document.querySelector(`.grid-cell:nth-child(${targetUnit.currentSquare + 1})`);
+                    targetCells.push(targetCell)
+                    const avatar = targetCell.querySelector('img');
+                    if (avatar) {
+                        avatar.classList.add('taking-damage');
+                        targetCell.classList.add('flash')
+                        avatars.push(avatar)
+                    }
+
+                    // Clean up
                     targetUnit.health -= attack.damage;
                     // You could add an animation here
                     // await animateAOEDamage(targetUnit, attack.damage);
@@ -71,6 +85,13 @@ async function applyAOEdamage(stateObj, targetIndex, attack, isPlayer) {
             }
         }
     });
+    await new Promise(resolve => setTimeout(resolve, 300));
+    for (let i=0; i < targetCells.length; i++) {
+        targetCells[i].classList.remove('flash')
+        avatars[i].classList.remove('glow-red')
+    }
+    return stateObj
+    
 }
 
 function resetUnitTurnStatus(units) {
@@ -89,22 +110,27 @@ async function executeAttack(stateObj, attackIndex, targetIndex) {
         draft.playerArmy[draft.selectedUnitIndex].unitAttackedThisTurn = true;
     });
 
-    const attackerSquare = stateObj.playerArmy[stateObj.selectedUnitIndex].currentSquare;
+    const attacker = stateObj.playerArmy[stateObj.selectedUnitIndex]
+    const attackerSquare = attacker.currentSquare;
     const targetSquare = stateObj.opponentArmy[targetIndex].currentSquare;
 
     // Determine if the attack hits
-    const distance = chebyshevDistance(attackerSquare, targetSquare);
-    const hitRoll = Math.random();
-    const markBuff = stateObj.opponentArmy[targetIndex].mark * 0.1;
-    const stunnedPenalty = stateObj.playerArmy[stateObj.selectedUnitIndex].accuracy * 0.1;
-    const distanceModifier = ((distance - 1) * attack.accuracyModifier);
-    const threshold = distanceModifier + stunnedPenalty - markBuff;
-    const hit = hitRoll > threshold;
-
+    let hit = true
+    if (attack.accuracyModifier > 0) {
+        const distance = chebyshevDistance(attackerSquare, targetSquare);
+        const hitRoll = Math.random();
+        const markBuff = stateObj.opponentArmy[targetIndex].mark * 0.1;
+        const stunnedPenalty = stateObj.playerArmy[stateObj.selectedUnitIndex].accuracy * 0.1;
+        const distanceModifier = ((distance - 1) * attack.accuracyModifier);
+        const threshold = distanceModifier + stunnedPenalty - markBuff;
+        console.log('needed to roll a ' + Math.round(threshold*100) + " and rolled a " + Math.round(hitRoll*100))
+        hit = hitRoll > threshold;
+    }
+    
     // Animate the attack
     await animateAttack(attackerSquare, targetSquare, hit, stateObj.gridSize);
 
-    if (hit) {
+    if (hit || !(attack.accuracyModifier > 0)) {
         stateObj = await attack.execute(stateObj, targetIndex, attack);
     }
 

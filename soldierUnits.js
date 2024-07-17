@@ -107,10 +107,10 @@ class minigunWarrior extends BasicWarrior {
         this.type = 'advancedWarrior';
         this.name = "Minigunner"
         this.leader = false;
-        this.health = 8;
+        this.health = 6;
         this.color = color;
         this.movementSquares = 1;
-        this.points = 4;
+        this.points = 3;
         this.moveTowardsClosestEnemy = true;
         this.movement = "towardsClosestEnemy";
         this.img = 'img/minigun.png',
@@ -156,7 +156,7 @@ class speederBike extends BasicWarrior {
         this.health = 7;
         this.color = color;
         this.movementSquares = 3;
-        this.points = 8;
+        this.points = 6;
         this.moveTowardsClosestEnemy = true;
         this.leader = false;
         this.movement = "towardsClosestEnemy";
@@ -309,7 +309,7 @@ class Lieutenant extends BasicWarrior {
         this.health = 6;
         this.color = color;
         this.movementSquares = 3;
-        this.points = 2;
+        this.points = 4;
         this.moveTowardsClosestEnemy = true;
         this.movement = "towardsClosestEnemy";
         this.img = 'img/lieutenant.png',

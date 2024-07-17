@@ -165,24 +165,6 @@ function createStartGameButton(stateObj) {
     return startButton;
 }
 
-// function animateAttack(targetSquare) {
-//     const cellElement = document.querySelector(`.grid-cell:nth-child(${targetSquare + 1})`);
-//     const circle = document.createElement('div');
-//     circle.className = 'attack-animation';
-//     circle.style.cssText = `
-//         position: absolute;
-//         width: 20px;
-//         height: 20px;
-//         background-color: white;
-//         border-radius: 50%;
-//         opacity: 0;
-//         animation: flash 0.1s ease-out;
-//         z-index: 1000;
-//     `;
-//     cellElement.appendChild(circle);
-//     setTimeout(() => circle.remove(), 500);
-// }
-
 async function animateAttack(attackerSquare, targetSquare, hit, gridSize) {
     const gridContainer = document.querySelector('.grid-container');
     

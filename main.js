@@ -398,6 +398,7 @@ async function enemyAttack(stateObj, enemy) {
         const distanceModifier = ((distance - 1) * attackInfo.attack.accuracyModifier);
         const threshold = distanceModifier + stunnedPenalty - markBuff;
         const hit = hitRoll > threshold;
+        console.log()
 
         // Animate the attack
         await animateAttack(attackerSquare, targetSquare, hit, stateObj.gridSize);
