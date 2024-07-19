@@ -35,9 +35,8 @@ async function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlay
     return immer.produce(stateObj, async draft => {
         const targetUnit = isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
         const attackerUnit = isPlayer ? draft.playerArmy.find(unit => unit.currentSquare === attackerSquare) : draft.opponentArmy.find(unit => unit.currentSquare === attackerSquare);
+        console.log(attackerUnit.name + " deals " + attack.damage + " to " + targetUnit.name)
         targetUnit.health -= attack.damage;
-
-        await new Promise(resolve => setTimeout(resolve, 500));
     });
 }
 
@@ -111,6 +110,12 @@ function resetUnitTurnStatus(units) {
     units.forEach(unit => {
         unit.unitMovedThisTurn = false;
         unit.unitAttackedThisTurn = false;
+    });
+}
+
+function resetUnitsHealth(units) {
+    units.forEach(unit => {
+        unit.health = unit.maxHealth;
     });
 }
 

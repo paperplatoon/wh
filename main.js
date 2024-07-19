@@ -252,7 +252,10 @@ async function handleAttackButtonClick(stateObj, attackOptionsIndex) {
     const targetIndex = (stateObj.targetEnemyIndex !== null) ? stateObj.targetEnemyIndex : stateObj.targetAllyIndex
     const attackIndex = selectedUnit.attacks.indexOf(stateObj.attackOptions[attackOptionsIndex])
 
-    console.log('target index is ' + targetIndex)
+    const existingPopup = document.querySelector('.attack-popup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
 
     stateObj = await executeAttack(stateObj, attackIndex, targetIndex);
     stateObj = setBackToNormal(stateObj);
@@ -348,16 +351,22 @@ function renderWeaponSelectionScreen(stateObj) {
     const appDiv = document.getElementById('app');
     appDiv.innerHTML = '';
 
-    const powerfulWeaponDiv = createAttackDiv(stateObj.powerfulWeaponChoice, attackIndex=false)
-
     const title = document.createElement('h2');
     title.textContent = 'Found ' + stateObj.powerfulWeaponChoice.name + '! Select a weapon to replace';
+    title.className = 'weapon-selection-title';
     appDiv.appendChild(title);
-    appDiv.appendChild(powerfulWeaponDiv)
-  
-    const unitAttackDivs = createUnitAttackDivs(stateObj, swappable=true);
-    appDiv.appendChild(unitAttackDivs);
-  }
+
+    const powerfulWeaponDiv = createAttackDiv(stateObj.powerfulWeaponChoice);
+    powerfulWeaponDiv.className = 'powerful-weapon-div';
+    appDiv.appendChild(powerfulWeaponDiv);
+
+    const unitRowDiv = document.createElement('div');
+    unitRowDiv.className = 'unit-row';
+    appDiv.appendChild(unitRowDiv);
+
+    const unitAttackDivs = createUnitAttackDivs(stateObj, true);
+    unitRowDiv.appendChild(unitAttackDivs);
+}
 
 function renderScreen(stateObj) {
     const screenRenderers = {
@@ -415,6 +424,9 @@ function checkForDeath(stateObj) {
         }
         if (draft.opponentArmy.length === 0) {
             console.log("all opponents dead, moving to selectRandom")
+            resetUnitsHealth(draft.playerArmy);
+            resetUnitTurnStatus(draft.playerArmy);
+            resetUnitTurnStatus(draft.opponentArmy);
             draft.powerfulWeaponChoice = selectRandomWeapon(powerfulWeapons)
             draft.currentScreen = "weaponSelectionScreen";
           }

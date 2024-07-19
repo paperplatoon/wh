@@ -2,6 +2,7 @@
 class BasicWarrior {
     constructor(isPlayerOwned = true, id = 0, color = "white", unitCurrentSquare = 0) {
         this.health = 5;
+        this.maxHealth = 5;
         this.points = 2;
         this.name = "rifleman"
         this.leader = false;
@@ -27,7 +28,7 @@ class BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj;
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage. Medium accuracy. Long range"
                     return textString
                 }
@@ -43,7 +44,7 @@ class BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage. Apply " + this.mark + ".  High accuracy. Long range"
                     return textString
                 }
@@ -58,6 +59,7 @@ class Shotgunner extends BasicWarrior {
         this.type = 'advancedWarrior';
         this.name = "Shotgunner"
         this.health = 4;
+        this.maxHealth = 4;
         this.color = color;
         this.movementSquares = 2;
         this.points = 2;
@@ -76,7 +78,7 @@ class Shotgunner extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  High accuracy. Medium range"
                     return textString
                 }
@@ -90,7 +92,7 @@ class Shotgunner extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  Low accuracy. Close range"
                     return textString
                 }
@@ -108,6 +110,7 @@ class minigunWarrior extends BasicWarrior {
         this.name = "Minigunner"
         this.leader = false;
         this.health = 6;
+        this.maxHealth = 6;
         this.color = color;
         this.movementSquares = 1;
         this.points = 3;
@@ -125,7 +128,7 @@ class minigunWarrior extends BasicWarrior {
                     stateObj = await applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Apply " + this.mark + " mark.  Perfect accuracy. Long range"
                     return textString
                 }
@@ -139,7 +142,7 @@ class minigunWarrior extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  Medium accuracy. Long range"
                     return textString
                 }
@@ -154,6 +157,7 @@ class speederBike extends BasicWarrior {
         this.type = 'advancedWarrior';
         this.name = "Speeder Bike"
         this.health = 7;
+        this.maxHealth = 7;
         this.color = color;
         this.movementSquares = 3;
         this.points = 6;
@@ -172,7 +176,7 @@ class speederBike extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  Medium-low accuracy. Medium range"
                     return textString
                 }
@@ -186,7 +190,7 @@ class speederBike extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  High accuracy. Must be adjacent"
                     return textString
                 }
@@ -200,7 +204,8 @@ class stunner extends BasicWarrior {
         super(isPlayerOwned, id, color, unitCurrentSquare);
         this.type = 'advancedWarrior';
         this.name = "Scout"
-        this.health = 3;
+        this.health = 4;
+        this.maxHealth = 4;
         this.color = color;
         this.movementSquares = 3;
         this.leader = false;
@@ -221,7 +226,7 @@ class stunner extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage. Lower target accuracy by " + this.stun + ". Very High accuracy. Medium range"
                     return textString
                 }
@@ -239,7 +244,7 @@ class stunner extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage. Lower accuracy by " + this.stun + ".  Apply " + this.mark + " mark. Must be adjacent"
                     return textString
                 }
@@ -254,10 +259,11 @@ class explosive extends BasicWarrior {
         this.type = 'advancedWarrior';
         this.name = "Grenadier"
         this.health = 3;
+        this.maxHealth = 3;
         this.color = color;
         this.leader = false;
         this.movementSquares = 2;
-        this.points = 2;
+        this.points = 3;
         this.moveTowardsClosestEnemy = true;
         this.movement = "towardsClosestEnemy";
         this.img = 'img/grenadier.png',
@@ -274,7 +280,7 @@ class explosive extends BasicWarrior {
                     stateObj = await applyAOEdamage(stateObj, targetIndex, attack, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage within " + this.radius + " squares. Perfect accuracy. Medium range"
                     return textString
                 }
@@ -288,7 +294,7 @@ class explosive extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  High accuracy. Close range"
                     return textString
                 }
@@ -307,6 +313,7 @@ class Lieutenant extends BasicWarrior {
         this.name = "Lieutenant"
         this.leader = true;
         this.health = 6;
+        this.maxHealth = 6;
         this.color = color;
         this.movementSquares = 3;
         this.points = 4;
@@ -324,7 +331,7 @@ class Lieutenant extends BasicWarrior {
                     stateObj = await applyStun(stateObj, targetIndex, attack.stun, !this.isPlayerOwned)
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Raise ally accuracy by " + (-this.stun) + ".  Perfect accuracy. Close range"
                     return textString
                 }
@@ -339,7 +346,7 @@ class Lieutenant extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  Perfect accuracy. Must be adjacent"
                     return textString
                 }

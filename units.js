@@ -6,6 +6,7 @@ class Samurai extends BasicWarrior {
         this.name = "Samurai"
         this.race = "samuraiArmy"
         this.health = 5;
+        this.maxHealth = 5;
         this.color = color;
         this.movementSquares = 2;
         this.leader = false;
@@ -27,7 +28,7 @@ class Samurai extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  Increase evasiveness by + " + (-this.mark) + ". High accuracy. Medium range"
                     return textString
                 }
@@ -44,7 +45,7 @@ class Samurai extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  Increase evasiveness by + " + (-this.mark) + ". Very high accuracy. Medium range"
                     return textString
                 }
@@ -59,6 +60,7 @@ class katana extends BasicWarrior {
         this.name = "Katana Samurai"
         this.race = "samuraiArmy"
         this.health = 5;
+        this.maxHealth = 5;
         this.color = color;
         this.movementSquares = 2;
         this.leader = false;
@@ -80,7 +82,7 @@ class katana extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  Increase evasiveness by + " + (-this.mark) + ". High accuracy. Medium range"
                     return textString
                 }
@@ -97,7 +99,7 @@ class katana extends BasicWarrior {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
                     return stateObj
                 },
-                text: () => {
+                text: function() {
                     let textString = "Deal " + this.damage + " damage.  Increase evasiveness by + " + (-this.mark) + ". Very high accuracy. Medium range"
                     return textString
                 }
@@ -125,10 +127,10 @@ function getRandomNumbersInRange(x, y, arraySize) {
 const playerLocations = getRandomNumbersInRange(0, 16, 4)
 const opponentLocations = getRandomNumbersInRange(47, 63, 4)
 
-// const playerWarrior1 = new stunner(true, 0, "blue", playerLocations[0]);
-// const playerWarrior2 = new Lieutenant(true, 1, "blue", playerLocations[1]);
-// const playerWarrior3 = new minigunWarrior(true, 2, "green", playerLocations[2]);
-// const playerWarrior4 = new speederBike(true, 3, "gold", playerLocations[3]);
+const playerWarrior1 = new stunner(true, 0, "blue", playerLocations[0]);
+const playerWarrior2 = new Lieutenant(true, 1, "blue", playerLocations[1]);
+const playerWarrior3 = new minigunWarrior(true, 2, "green", playerLocations[2]);
+const playerWarrior4 = new speederBike(true, 3, "gold", playerLocations[3]);
 
 const opponentWarrior1 = new BasicWarrior(false, 4, "red",  opponentLocations[0]);
 const opponentWarrior2 = new BasicWarrior(false, 5, "red", opponentLocations[1]);
@@ -148,7 +150,9 @@ const powerfulWeapons = [
         stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
         return stateObj;
       },
-      text: () => "Deal 4 damage. Very high accuracy. Long range"
+      text: function() {
+        "Deal 4 damage. Very high accuracy. Long range"
+      }
     },
     {
       name: "Railgun",
@@ -159,7 +163,9 @@ const powerfulWeapons = [
         stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
         return stateObj;
       },
-      text: () => "Deal 5 damage. High accuracy. Very long range"
+      text: function() {
+        "Deal 5 damage. High accuracy. Very long range"
+      },
     },
     // Add more powerful weapons here
   ];

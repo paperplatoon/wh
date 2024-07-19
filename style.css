@@ -175,13 +175,13 @@
 
 @keyframes glowBlue {
     0% { background-color: rgba(255, 255, 255, 0.347);
-        box-shadow: 0 0 1.5vmin 1.5vmin blue; 
+        //box-shadow: 0 0 0.25vmin 0.25vmin blue; 
     }
-    50% { background-color: rgba(1, 244, 232, 0.391);
-        box-shadow: 0 0 0.5vmin 0.5vmin rgb(0, 255, 255); 
+    50% { background-color: rgba(1, 244, 232, 0.591);
+        box-shadow: 0 0 0.5vmin 0.5vmin blue; 
     }
     100% { background-color: rgba(255, 255, 255, 0.333);
-        box-shadow: 0 0 1.5vmin 1.5vmin blue; 
+        box-shadow: 0 0 0.25vmin 0.25vmin blue; 
     }
 }
 
@@ -201,13 +201,16 @@
 
 @keyframes glowRed {
     0% {
-        box-shadow: 0 0 5px 2px rgb(255, 0, 0); 
+        background-color: red;
+        box-shadow: 0 0 2px 1px rgb(255, 0, 0); 
     }
     50% {
-        box-shadow: 0 0 20px 15px rgb(255, 0, 0); 
+        background-color: rgba(255, 0, 0, 0.694);
+        box-shadow: 0 0 10px 5px rgb(255, 0, 0, 0.7); 
     }
     100% {
-        box-shadow: 0 0 5px 2px rgb(255, 0, 0); 
+        background-color: red;
+        box-shadow: 0 0 2px 1px rgb(255, 0, 0); 
     }
 }
 
@@ -339,5 +342,91 @@
 @keyframes duck {
     0%, 100% { transform: translateX(0); }
     10% { transform: translateX(-20px); }
+}
+
+.weapon-selection-title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.powerful-weapon-div {
+    width: 80%;
+    margin: 0 auto 20px;
+    padding: 10px;
+    border: 2px solid gold;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+}
+
+.unit-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.unit-attack-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.unit-div {
+    width: 15vw;
+    height: 20vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.unit-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.unit-avatar {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.attacks-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    overflow-y: auto;
+    max-height: calc(20vh - 100px);
+}
+
+.attack-div {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.attack-div:hover {
+    background-color: #e0e0e0;
+}
+
+.attack-div h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.9em;
+}
+
+.attack-div p {
+    margin: 0;
+    font-size: 0.8em;
 }
 
