@@ -21,11 +21,11 @@ class BasicWarrior {
         this.attacks = [
             {
                 name: "Rifle Shot - 2",
-                range: 4,
-                accuracyModifier: 0.15,
-                damage: 2,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                range: 8,
+                accuracyModifier: 0.01,
+                damage: 6,
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj;
                 },
                 text: function() {
@@ -39,9 +39,9 @@ class BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 1,
                 mark: 1,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, isPlayerOwned);
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -74,8 +74,8 @@ class Shotgunner extends BasicWarrior {
                 range: 4,
                 accuracyModifier: 0.1,
                 damage: 1,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -88,8 +88,8 @@ class Shotgunner extends BasicWarrior {
                 range: 3,
                 accuracyModifier: 0.25,
                 damage: 4,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -124,8 +124,8 @@ class minigunWarrior extends BasicWarrior {
                 range: 6,
                 damage: 0,
                 mark: 1,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -138,8 +138,8 @@ class minigunWarrior extends BasicWarrior {
                 range: 5,
                 accuracyModifier: 0.15,
                 damage: 3,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -172,8 +172,8 @@ class speederBike extends BasicWarrior {
                 range: 4,
                 accuracyModifier: 0.2,
                 damage: 5,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -186,8 +186,8 @@ class speederBike extends BasicWarrior {
                 range: 1,
                 accuracyModifier: 0.15,
                 damage: 6,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -221,9 +221,9 @@ class stunner extends BasicWarrior {
                 stun: 1,
                 accuracyModifier: 0.05,
                 damage: 1,
-                execute: async (stateObj, targetIndex, attack) => {
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
                     stateObj = await applyStun(stateObj, targetIndex, attack.stun, this.isPlayerOwned)
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -238,10 +238,10 @@ class stunner extends BasicWarrior {
                 damage: 3,
                 stun: 2,
                 mark: 2,
-                execute: async (stateObj, targetIndex, attack) => {
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
                     stateObj = await applyStun(stateObj, targetIndex, attack.stun, this.isPlayerOwned)
-                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, this.playerOwned);
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                    stateObj = await applyMark(stateObj, targetIndex, attack.mark, isPlayerOwned);
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -275,9 +275,8 @@ class explosive extends BasicWarrior {
                 radius: 2,
                 damage: 2,
                 explosive: true,
-                execute: async (stateObj, targetIndex, attack) => {
-                    console.log("targeting unit " + targetIndex)
-                    stateObj = await applyAOEdamage(stateObj, targetIndex, attack, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyAOEdamage(stateObj, targetIndex, attack, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -290,8 +289,8 @@ class explosive extends BasicWarrior {
                 range: 3,
                 accuracyModifier: 0.1,
                 damage: 2,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -327,8 +326,8 @@ class Lieutenant extends BasicWarrior {
                 range: 3,
                 stun: -2,
                 buff: true,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyStun(stateObj, targetIndex, attack.stun, !this.isPlayerOwned)
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyStun(stateObj, targetIndex, attack.stun, !isPlayerOwned)
                     return stateObj
                 },
                 text: function() {
@@ -342,8 +341,8 @@ class Lieutenant extends BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 4,
                 buff: false,
-                execute: async (stateObj, targetIndex, attack) => {
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {

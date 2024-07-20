@@ -22,10 +22,10 @@ class Samurai extends BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 1,
                 mark: -2,
-                execute: async (stateObj, targetIndex, attack) => {
-                    const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
-                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    const userIndex = (isPlayerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
+                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !isPlayerOwned)
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -39,10 +39,10 @@ class Samurai extends BasicWarrior {
                 accuracyModifier: 0.05,
                 damage: 2,
                 mark: -1,
-                execute: async (stateObj, targetIndex, attack) => {
-                    const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
-                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    const userIndex = (isPlayerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
+                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !isPlayerOwned)
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -76,10 +76,10 @@ class katana extends BasicWarrior {
                 accuracyModifier: 0.1,
                 damage: 1,
                 mark: -2,
-                execute: async (stateObj, targetIndex, attack) => {
-                    const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
-                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    const userIndex = (isPlayerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
+                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !isPlayerOwned)
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -93,10 +93,10 @@ class katana extends BasicWarrior {
                 accuracyModifier: 0.05,
                 damage: 2,
                 mark: -1,
-                execute: async (stateObj, targetIndex, attack) => {
-                    const userIndex = (this.playerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
-                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !this.playerOwned)
-                    stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+                execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    const userIndex = (isPlayerOwned) ? stateObj.playerArmy.indexOf(this) : stateObj.opponentArmy.indexOf(this)
+                    stateObj = await applyMark(stateObj, userIndex, attack.mark, !isPlayerOwned)
+                    stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj
                 },
                 text: function() {
@@ -137,6 +137,7 @@ const opponentWarrior2 = new BasicWarrior(false, 5, "red", opponentLocations[1])
 const opponentWarrior3 = new Lieutenant(false, 6, "red", opponentLocations[2]);
 const opponentWarrior4 = new BasicWarrior(false, 7, "red", opponentLocations[3]);
 
+let playerArray = [playerWarrior2, playerWarrior4]
 let opponentArray = [opponentWarrior1, opponentWarrior2, opponentWarrior3, opponentWarrior4]
 opponentArray = [opponentWarrior1]
 
@@ -146,12 +147,12 @@ const powerfulWeapons = [
       range: 5,
       accuracyModifier: 0.05,
       damage: 4,
-      execute: async (stateObj, targetIndex, attack) => {
-        stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+      execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+        stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
         return stateObj;
-      },
+    },
       text: function() {
-        "Deal 4 damage. Very high accuracy. Long range"
+        return "Deal 4 damage. Very high accuracy. Long range";
       }
     },
     {
@@ -159,16 +160,16 @@ const powerfulWeapons = [
       range: 6,
       accuracyModifier: 0.1,
       damage: 5,
-      execute: async (stateObj, targetIndex, attack) => {
-        stateObj = await applyDamage(stateObj, targetIndex, attack, this.currentSquare, this.playerOwned);
+      execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+        stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
         return stateObj;
-      },
+    },
       text: function() {
-        "Deal 5 damage. High accuracy. Very long range"
+        return "Deal 5 damage. High accuracy. Very long range";
       },
     },
     // Add more powerful weapons here
-  ];
+];
 
   
 

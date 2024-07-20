@@ -344,33 +344,37 @@
     10% { transform: translateX(-20px); }
 }
 
-.weapon-selection-title {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
 .powerful-weapon-div {
-    width: 80%;
-    margin: 0 auto 20px;
-    padding: 10px;
+    width: 85vw;
+    height: 15vh;
+    margin: 0.1vmin;
+    padding: 0.5vmin;
     border: 2px solid gold;
     border-radius: 5px;
     background-color: #f0f0f0;
 }
 
+.weapon-selection-title {
+    color: white;
+    margin: 0;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
 .unit-row {
     display: flex;
+    flex-direction: row;
     justify-content: center;
     align-items: flex-start;
     flex-wrap: wrap;
-    gap: 20px;
 }
 
 .unit-attack-container {
     display: flex;
+    width: 98vw;
+    height: 40vh;
+    flex-direction: row;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 20px;
 }
 
 .unit-div {
@@ -420,13 +424,9 @@
     background-color: #e0e0e0;
 }
 
-.attack-div h4 {
-    margin: 0 0 5px 0;
-    font-size: 0.9em;
+h4 {
+    margin: 0;
 }
 
-.attack-div p {
-    margin: 0;
-    font-size: 0.8em;
-}
+
 

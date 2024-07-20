@@ -1,11 +1,11 @@
 //the problem is that buffs don't work
 //they don't even appear unless the buffer is in range of an ENEMY
 let state = {
-    currentScreen: "armySelectionScreen",
+    currentScreen: "weaponSelectionScreen",
     playerTurn: true,
     turnCounter: 0,
     currentFloor: 0,
-    playerArmy: [],
+    playerArmy: [...playerArray],
     opponentArmy: [...opponentArray],
     movableSquares: [],
     attackRangeSquares: [],
@@ -22,7 +22,7 @@ let state = {
     selectedArmyPoints: 0,
     maxArmyPoints: 10, // Adjust this value as needed
     selectedArmy: [],
-    powerfulWeaponChoice: null,
+    powerfulWeaponChoice: powerfulWeapons[1],
 };
 
 async function handleEndTurn(stateObj) {
@@ -122,7 +122,7 @@ async function renderGlowingSquares(stateObj) {
     });
 
     appDiv.appendChild(gridContainer);
-    let attackRowDiv = createAttackDivs(stateObj.playerArmy[stateObj.selectedUnitIndex])
+    let attackRowDiv = createUnitAttacksDiv(stateObj.playerArmy[stateObj.selectedUnitIndex])
     appDiv.appendChild(attackRowDiv)
 }
 
@@ -159,11 +159,10 @@ async function renderAttackPopup(stateObj) {
     for (let i=0; i < stateObj.attackOptions.length; i++ ) {
         let attack = stateObj.attackOptions[i]
         if ( (stateObj.targetEnemyIndex !== null && !attack.buff) || (stateObj.targetAllyIndex !== null && attack.buff) ) {
-            console.log("creating buttons and targ enemy index is " + stateObj.targetEnemyIndex)
             let attackButton = createAttackButton(stateObj, attack);
             attackButton.onclick = async () => {
-                console.log("clicking buttons and targ enemy index is " + stateObj.targetEnemyIndex)
-                    stateObj = await handleAttackButtonClick(stateObj, i);
+                // console.log("clicking buttons and targ enemy index is " + stateObj.targetEnemyIndex)
+                stateObj = await handleAttackButtonClick(stateObj, i);
             };
             popup.appendChild(attackButton);
         } 
@@ -200,21 +199,25 @@ function handleAttackSelection(stateObj, unitIndex, attackIndex) {
     });
   }
 
-  function swapAttack(stateObj, unitIndex, attackIndex) {
-    stateObj = immer.produce(stateObj, draft => {
-      draft.playerArmy[unitIndex].attacks[attackIndex] = stateObj.powerfulWeaponChoice;
-      draft.currentFloor++;
-      draft.powerfulWeaponChoice = null
+function swapAttack(stateObj, unitIndex, attackIndex) {
+    stateObj =  immer.produce(stateObj, draft => {
+        const unit = draft.playerArmy[unitIndex];
+        const newWeapon = {...stateObj.powerfulWeaponChoice};
+        
+        // Ensure the execute function has access to unit properties
+        unit.attacks[attackIndex] = newWeapon;
+
+        draft.currentFloor++;
+        draft.powerfulWeaponChoice = null;
     });
-    return startNewFight(stateObj);
-  }
+    return startNewFight(stateObj)
+}
 
   function startNewFight(stateObj) {
     console.log("starting new fight")
     stateObj = immer.produce(stateObj, draft => {
       draft.opponentArmy = [...opponentArray];
       draft.opponentArmy = opponentArray.map(unit => resetUnit(unit));
-      console.log(JSON.stringify(draft.opponentArmy))
       draft.turnCounter = 0;
       draft.playerTurn = true;
       draft.currentScreen = "normalScreen"
@@ -228,7 +231,6 @@ function handleAttackSelection(stateObj, unitIndex, attackIndex) {
     });
 
     });
-    console.log('current screen ' + stateObj.currentScreen)
     updateState(stateObj);
   }
 
@@ -364,7 +366,7 @@ function renderWeaponSelectionScreen(stateObj) {
     unitRowDiv.className = 'unit-row';
     appDiv.appendChild(unitRowDiv);
 
-    const unitAttackDivs = createUnitAttackDivs(stateObj, true);
+    const unitAttackDivs = displayPlayerUnits(stateObj, true);
     unitRowDiv.appendChild(unitAttackDivs);
 }
 
@@ -438,7 +440,6 @@ function checkForDeath(stateObj) {
   // Usage
 
 function updateState(stateObj) {
-    console.log('stateObj.opponentArmy  ' + JSON.stringify(stateObj.opponentArmy) )
     if (stateObj.currentScreen === "normalScreen") {
         stateObj = checkForDeath(stateObj)
         stateObj = updateGrid(stateObj)
@@ -492,7 +493,6 @@ async function enemyAttack(stateObj, enemy) {
         const distanceModifier = ((distance - 1) * attackInfo.attack.accuracyModifier);
         const threshold = distanceModifier + stunnedPenalty - markBuff;
         const hit = hitRoll > threshold;
-        console.log()
 
         // Animate the attack
         await animateAttack(attackerSquare, targetSquare, hit, stateObj.gridSize);

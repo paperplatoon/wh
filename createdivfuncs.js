@@ -83,7 +83,7 @@ function createStatusIndicator(status, value) {
     return indicator;
 }
 
-function createAttackDivs(unit) {
+function createUnitAttacksDiv(unit) {
     const rowDiv = document.createElement('div');
     rowDiv.classList.add('attack-bottom-row-div')
 
@@ -105,36 +105,40 @@ function createAttackDivs(unit) {
     return rowDiv
 }
 
-function createUnitAttackDivs(stateObj, swappable=false) {
-    const container = document.createElement('div');
-    container.className = 'unit-attack-container';
-  
-    stateObj.playerArmy.forEach((unit, unitIndex) => {
-      const unitDiv = document.createElement('div');
-      unitDiv.className = 'unit-div';
+function createUnitCard(stateObj, unit, swappable) {
+    let unitIndex = stateObj.playerArmy.indexOf(unit)
+    let unitDiv = document.createElement('div');
+    unitDiv.className = 'unit-div';
 
-      const unitName = document.createElement('div');
-      unitName.innerHTML = `<h3>${unit.name}</h3>`;
-      unitDiv.append(unitName)
+    let avatar = createImageAvatar(unit);
+    unitDiv.append(avatar)
 
-      const avatar = createImageAvatar(unit);
-      unitDiv.append(avatar)
-  
-      unit.attacks.forEach((attack, attackIndex) => {
-        let attackDiv = createAttackDiv(attack, attackIndex)
+    unit.attacks.forEach((attack, attackIndex) => {
+        let attackDiv = createAttackDiv(attack)
         if (swappable) {
             attackDiv.addEventListener('click', () => handleAttackSelection(stateObj, unitIndex, attackIndex));
+            attackDiv.classList.add('attack-swappable')
         }
         unitDiv.appendChild(attackDiv);
-      });
-  
-      container.appendChild(unitDiv);
     });
-  
-    return container;
+    
+    return unitDiv
 }
 
-function createAttackDiv(attack, attackIndex=false) {
+
+function displayPlayerUnits(stateObj, swappable=false) {
+    const unitRow = document.createElement('div');
+    unitRow.className = 'unit-row';
+
+    stateObj.playerArmy.forEach((unit) => {
+        tempUnitDiv = createUnitCard(stateObj, unit, swappable)
+        unitRow.append(tempUnitDiv)  
+    });
+  
+    return unitRow;
+}
+
+function createAttackDiv(attack) {
     const attackDiv = document.createElement('div');
     attackDiv.className = 'attack-div';
     attackDiv.innerHTML = `
@@ -256,11 +260,9 @@ async function animateAttack(attackerSquare, targetSquare, hit, gridSize) {
     const targetCell = document.querySelector(`.grid-cell:nth-child(${targetSquare + 1})`);
     const avatar = targetCell.querySelector('img');
     if (hit && avatar) {
-        console.log('applying glow red')
         avatar.classList.add('taking-damage');
         targetCell.classList.add('flash')
     } else if (avatar) {
-        console.log('applying duck')
         avatar.classList.add('duck');
     }
 

@@ -18,7 +18,7 @@ function selectRandomWeapon(weapons) {
 async function executeEnemyAttack(stateObj, attacker, target, attack) {
     const targetIndex = stateObj.playerArmy.findIndex(unit => unit.currentSquare === target.currentSquare);
 
-    stateObj = await attack.execute(stateObj, targetIndex, attack);
+    stateObj = await attack.execute(stateObj, targetIndex, attack, attacker, false);
     return immer.produce(stateObj, draft => {
         
         if (targetIndex === -1) return;
@@ -32,7 +32,7 @@ async function executeEnemyAttack(stateObj, attacker, target, attack) {
 }
 
 async function applyDamage(stateObj, targetIndex, attack, attackerSquare, isPlayer) {
-    return immer.produce(stateObj, async draft => {
+    return immer.produce(stateObj, draft => {
         const targetUnit = isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
         const attackerUnit = isPlayer ? draft.playerArmy.find(unit => unit.currentSquare === attackerSquare) : draft.opponentArmy.find(unit => unit.currentSquare === attackerSquare);
         console.log(attackerUnit.name + " deals " + attack.damage + " to " + targetUnit.name)
@@ -149,7 +149,7 @@ async function executeAttack(stateObj, attackIndex, targetIndex) {
     await animateAttack(attackerSquare, targetSquare, hit, stateObj.gridSize);
 
     if (hit || !(attack.accuracyModifier > 0)) {
-        stateObj = await attack.execute(stateObj, targetIndex, attack);
+        stateObj = await attack.execute(stateObj, targetIndex, attack, attacker, true);
     }
 
     return stateObj;
