@@ -130,7 +130,7 @@ async function executeAttack(stateObj, attackIndex, targetIndex) {
 
     const attacker = stateObj.playerArmy[stateObj.selectedUnitIndex]
     const attackerSquare = attacker.currentSquare;
-    const targetSquare = stateObj.opponentArmy[targetIndex].currentSquare;
+    const targetSquare = (attack.buff) ? stateObj.playerArmy[targetIndex].currentSquare : stateObj.opponentArmy[targetIndex].currentSquare;
 
     // Determine if the attack hits
     let hit = true
@@ -181,7 +181,9 @@ async function applyMark(stateObj, targetIndex, amount, isPlayer) {
 
 async function applyStun(stateObj, targetIndex, amount, isPlayer) {
     return immer.produce(stateObj, async draft => {
-        const targetUnit = !isPlayer ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
+        console.log("applying stun ad isplayer is " + isPlayer + " and target index is " + targetIndex)
+        const targetUnit = (isPlayer) ? draft.opponentArmy[targetIndex] : draft.playerArmy[targetIndex];
+        console.log("applying stun to " + targetUnit.name)
         if (targetUnit) {
             targetUnit.accuracy += amount;
         }

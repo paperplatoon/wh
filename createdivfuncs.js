@@ -23,11 +23,14 @@ function createRestartButton() {
     return endTurnButton
 }
 
-function createImageAvatar(cell) {
+function createImageAvatar(cell, addlClassName=false) {
     const img = document.createElement('img');
     img.src = cell.img;
     img.alt = '';
-    img.className = 'centered-img';
+    img.className = 'img-avatar';
+    if (addlClassName) {
+        img.classList.add(addlClassName)
+    }
     return img
 }
 
@@ -110,7 +113,7 @@ function createUnitCard(stateObj, unit, swappable) {
     let unitDiv = document.createElement('div');
     unitDiv.className = 'unit-div';
 
-    let avatar = createImageAvatar(unit);
+    let avatar = createImageAvatar(unit, "card-img-avatar");
     unitDiv.append(avatar)
 
     unit.attacks.forEach((attack, attackIndex) => {

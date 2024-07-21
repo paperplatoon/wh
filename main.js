@@ -1,7 +1,7 @@
 //the problem is that buffs don't work
 //they don't even appear unless the buffer is in range of an ENEMY
 let state = {
-    currentScreen: "weaponSelectionScreen",
+    currentScreen: "armySelectionScreen",
     playerTurn: true,
     turnCounter: 0,
     currentFloor: 0,
@@ -182,7 +182,7 @@ function handleAttackSelection(stateObj, unitIndex, attackIndex) {
     const confirmationPopup = document.createElement('div');
     confirmationPopup.className = 'confirmation-popup';
     confirmationPopup.innerHTML = `
-      <p>Are you sure you want to swap this weapon with the found weapon?</p>
+      <p>Are you sure you want to replace ${stateObj.playerArmy[unitIndex].attacks[attackIndex].name} with ${stateObj.powerfulWeaponChoice.name}?</p>
       <button id="confirm-swap">Yes</button>
       <button id="cancel-swap">Cancel</button>
     `;
@@ -354,7 +354,7 @@ function renderWeaponSelectionScreen(stateObj) {
     appDiv.innerHTML = '';
 
     const title = document.createElement('h2');
-    title.textContent = 'Found ' + stateObj.powerfulWeaponChoice.name + '! Select a weapon to replace';
+    title.textContent = 'Found ' + stateObj.powerfulWeaponChoice.name + '! Choose unit attack to swap';
     title.className = 'weapon-selection-title';
     appDiv.appendChild(title);
 

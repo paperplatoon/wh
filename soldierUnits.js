@@ -21,9 +21,9 @@ class BasicWarrior {
         this.attacks = [
             {
                 name: "Rifle Shot - 2",
-                range: 8,
-                accuracyModifier: 0.01,
-                damage: 6,
+                range: 5,
+                accuracyModifier: 0.15,
+                damage: 2,
                 execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
                     stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
                     return stateObj;
@@ -327,6 +327,7 @@ class Lieutenant extends BasicWarrior {
                 stun: -2,
                 buff: true,
                 execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
+                    console.log("buffing unit")
                     stateObj = await applyStun(stateObj, targetIndex, attack.stun, !isPlayerOwned)
                     return stateObj
                 },
