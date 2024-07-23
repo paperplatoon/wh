@@ -139,25 +139,24 @@ const opponentWarrior4 = new BasicWarrior(false, 7, "red", opponentLocations[3])
 
 let playerArray = [playerWarrior2, playerWarrior4]
 let opponentArray = [opponentWarrior1, opponentWarrior2, opponentWarrior3, opponentWarrior4]
-opponentArray = [opponentWarrior1]
 
 const powerfulWeapons = [
     {
-      name: "Plasma Cannon",
-      range: 5,
+      name: "Plasma Sniper",
+      range: 6,
       accuracyModifier: 0.05,
-      damage: 4,
+      damage: 3,
       execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
         stateObj = await applyDamage(stateObj, targetIndex, attack, attackingUnit.currentSquare, isPlayerOwned);
         return stateObj;
     },
       text: function() {
-        return "Deal 4 damage. Very high accuracy. Long range";
+        return "Deal 3 damage. Very high accuracy. Very Long range";
       }
     },
     {
       name: "Railgun",
-      range: 6,
+      range: 4,
       accuracyModifier: 0.1,
       damage: 5,
       execute: async (stateObj, targetIndex, attack, attackingUnit, isPlayerOwned) => {
@@ -165,7 +164,7 @@ const powerfulWeapons = [
         return stateObj;
     },
       text: function() {
-        return "Deal 5 damage. High accuracy. Very long range";
+        return "Deal 5 damage. High accuracy. Medium range";
       },
     },
     // Add more powerful weapons here

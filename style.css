@@ -287,10 +287,21 @@
 }
 
 .unit-selection-container {
+    height: 50vh;
+}
+
+.unit-selection-container, .current-army-selection-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
+}
+
+.current-army-selection-container {
+    margin-top: 2vh;
+    border: 3px double white;
+    height: 25vh;
+    width: 80vw;
 }
 
 .unit-selection {

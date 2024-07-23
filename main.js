@@ -22,6 +22,7 @@ let state = {
     selectedArmyPoints: 0,
     maxArmyPoints: 10, // Adjust this value as needed
     selectedArmy: [],
+    startingArmy: [],
     powerfulWeaponChoice: powerfulWeapons[1],
 };
 
@@ -202,13 +203,12 @@ function handleAttackSelection(stateObj, unitIndex, attackIndex) {
 function swapAttack(stateObj, unitIndex, attackIndex) {
     stateObj =  immer.produce(stateObj, draft => {
         const unit = draft.playerArmy[unitIndex];
-        const newWeapon = {...stateObj.powerfulWeaponChoice};
         
-        // Ensure the execute function has access to unit properties
-        unit.attacks[attackIndex] = newWeapon;
+        unit.attacks[attackIndex] = {...stateObj.powerfulWeaponChoice};
+        draft.powerfulWeaponChoice = null;
 
         draft.currentFloor++;
-        draft.powerfulWeaponChoice = null;
+        draft.startingArmy = draft.playerArmy
     });
     return startNewFight(stateObj)
 }
@@ -431,6 +431,7 @@ function checkForDeath(stateObj) {
             resetUnitTurnStatus(draft.opponentArmy);
             draft.powerfulWeaponChoice = selectRandomWeapon(powerfulWeapons)
             draft.currentScreen = "weaponSelectionScreen";
+            draft.playerArmy = [...draft.startingArmy]
           }
     });
     
@@ -708,10 +709,22 @@ function renderArmySelectionScreen(stateObj) {
         unitSelectionDiv.appendChild(unitDiv);
     });
 
+    //"unselectAtStart"
+
     appDiv.appendChild(unitSelectionDiv);
 
     const startGameButton = createStartGameButton(stateObj);
     appDiv.appendChild(startGameButton);
+
+    const currentArmyDiv = document.createElement('div');
+    currentArmyDiv.className = 'current-army-selection-container';
+
+    stateObj.selectedArmy.forEach(unit => {
+        const unitDiv = createUnitSelectionDiv(unit, stateObj,"unselectAtStart");
+        currentArmyDiv.appendChild(unitDiv);
+    })
+    appDiv.appendChild(currentArmyDiv)
+
 }
 
 function findTargetForAttack(stateObj, enemy) {

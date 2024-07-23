@@ -174,7 +174,7 @@ function createGridCell(cell, index, stateObj) {
     return cellDiv;
 }
 
-function createUnitSelectionDiv(unit, stateObj) {
+function createUnitSelectionDiv(unit, stateObj, typeOfClick=false) {
     const unitDiv = document.createElement('div');
     unitDiv.className = 'unit-selection';
     
@@ -186,12 +186,20 @@ function createUnitSelectionDiv(unit, stateObj) {
     unitDiv.appendChild(avatar);
     unitDiv.appendChild(pointsDiv);
 
-    unitDiv.addEventListener('click', () => {
-        if (stateObj.selectedArmyPoints + unit.points <= stateObj.maxArmyPoints) {
-            stateObj = addUnitToArmy(stateObj, unit);
-            updateState(stateObj);
-        }
-    });
+    if (!typeOfClick) {
+        unitDiv.addEventListener('click', () => {
+            if (stateObj.selectedArmyPoints + unit.points <= stateObj.maxArmyPoints) {
+                stateObj = addUnitToArmy(stateObj, unit);
+                updateState(stateObj);
+            }
+        });
+    } else if (typeOfClick="unselectAtStart") {
+        unitDiv.addEventListener('click', () => {
+                stateObj = removeUnitFromArmy(stateObj, unit);
+                updateState(stateObj);
+        });
+    }
+    
 
     return unitDiv;
 }

@@ -212,7 +212,20 @@ function addUnitToArmy(stateObj, unit) {
     return immer.produce(stateObj, draft => {
         const newUnit = new unit.constructor(true, draft.currentUnitID++, "blue");
         draft.selectedArmy.push(newUnit);
+        draft.startingArmy.push(newUnit);
         draft.selectedArmyPoints += unit.points;
+    });
+}
+
+function removeUnitFromArmy(stateObj, unit) {
+    console.log("removing unit")
+    return immer.produce(stateObj, draft => {
+        unitIndex = draft.selectedArmy.indexOf(unit)
+        starterIndex = draft.startingArmy.indexOf(unit)
+        draft.selectedArmyPoints -= unit.points;
+
+        draft.selectedArmy.splice(unitIndex, 1);
+        draft.startingArmy.splice(starterIndex, 1);
     });
 }
 
